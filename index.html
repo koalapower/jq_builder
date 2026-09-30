@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Конструктор условий jq</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#ffffff; --panel:#f5f6f7; --popover:#ffffff; --hairline:#e8eaed; --hairline-strong:#17191b; --border-control:#d5d8dc;
+  --text:#17191b; --text-secondary:#6b7177; --text-muted:#9aa0a6;
+  --accent:#3d6deb; --accent-hover:#315fd6; --on-accent:#ffffff;
+  --nav-active-bg:#eceefc; --nav-active-fg:#3f51d1;
+  --good-bg:#e4f2d9; --good-fg:#2e7d32; --bad-bg:#fbe4e4; --bad-fg:#c62828; --warn-bg:#fdeed7; --warn-fg:#b26a00; --unknown-bg:#eceef0; --unknown-fg:#6b7177;
+  --tag-bg:#e9ebed; --tag-fg:#55595e;
+  --radius-control:8px; --radius-card:12px; --radius-tag:4px;
+  font-family:'Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --canvas:#17191b; --panel:#232628; --popover:#26292c; --hairline:#33373a; --hairline-strong:#e6e8ea; --border-control:#45494e;
+    --text:#e6e8ea; --text-secondary:#9aa0a6; --text-muted:#6b7177;
+    --accent:#3d6deb; --accent-hover:#5580f0; --nav-active-bg:#23283f; --nav-active-fg:#98a6f5;
+    --good-bg:#4d7c45; --good-fg:#d9f0cf; --bad-bg:#8f3d3d; --bad-fg:#f6d9d9; --warn-bg:#8a6423; --warn-fg:#f6e7c8; --unknown-bg:#3a3e42; --unknown-fg:#c3c8cd;
+    --tag-bg:#34383b; --tag-fg:#b8bdc2;
+  }
+}
+:root[data-theme="dark"]{
+  --canvas:#17191b; --panel:#232628; --popover:#26292c; --hairline:#33373a; --hairline-strong:#e6e8ea; --border-control:#45494e;
+  --text:#e6e8ea; --text-secondary:#9aa0a6; --text-muted:#6b7177; --nav-active-bg:#23283f; --nav-active-fg:#98a6f5;
+  --good-bg:#4d7c45; --good-fg:#d9f0cf; --bad-bg:#8f3d3d; --bad-fg:#f6d9d9; --warn-bg:#8a6423; --warn-fg:#f6e7c8; --unknown-bg:#3a3e42; --unknown-fg:#c3c8cd;
+  --tag-bg:#34383b; --tag-fg:#b8bdc2;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{ margin:0; background:var(--canvas); color:var(--text); font-variant-numeric:tabular-nums; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+.wrap{max-width:1220px; margin:0 auto; padding:28px 24px 60px;}
+header{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;}
+header h1{font-size:24px; font-weight:700; margin:0 0 6px; letter-spacing:-.01em;}
+header p{margin:0; color:var(--text-secondary); font-size:14px; max-width:700px; line-height:1.5;}
+.theme-toggle{ border:1px solid var(--border-control); background:var(--panel); color:var(--text-secondary); border-radius:var(--radius-control); width:36px; height:36px; cursor:pointer; font-size:15px; flex:0 0 auto;}
+
+.modal-overlay{ position:fixed; inset:0; background:rgba(10,10,10,.45); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; padding-top:calc(20px + env(safe-area-inset-top,0px)); padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));}
+.modal-overlay[hidden]{display:none;}
+.modal-card{ background:var(--popover); border:1px solid var(--hairline); border-radius:var(--radius-card); padding:22px; max-width:480px; width:100%; max-height:80vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.28);}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+.modal-title{font-size:17px; font-weight:700; margin:0;}
+pre.scheme{ font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.55; color:var(--text); background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius-control); padding:14px 16px; margin:14px 0; overflow-x:auto;}
+
+.registrybar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:18px 0; padding:12px 16px; background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius-card);}
+.registrybar .rb-label{font-size:12px; color:var(--text-secondary); margin-right:2px;}
+.btn{ font-family:inherit; font-size:14px; font-weight:500; border-radius:var(--radius-control); padding:8px 16px; height:36px; cursor:pointer; border:1px solid var(--border-control); background:var(--popover); color:var(--text);}
+.btn:hover{background:var(--panel);}
+.rb-status{font-size:12.5px; color:var(--text-muted);}
+.rb-status.ok{color:var(--good-fg);}
+.rb-status.err{color:var(--bad-fg);}
+
+.globalbar{display:flex; gap:24px; flex-wrap:wrap; align-items:flex-end; margin:0 0 18px; padding:14px 16px; background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius-card);}
+.gb-group{display:flex; flex-direction:column; gap:6px;}
+.gb-label{font-size:12px; color:var(--text-secondary); font-weight:500;}
+.segmented{display:flex; background:var(--popover); border:1px solid var(--border-control); border-radius:var(--radius-control); padding:2px;}
+.segmented button{ background:none; border:none; color:var(--text-secondary); font-family:inherit; font-size:13px; font-weight:500; padding:6px 14px; border-radius:6px; cursor:pointer;}
+.segmented button.active{background:var(--accent); color:var(--on-accent);}
+.gb-hint{font-size:12.5px; color:var(--text-muted); max-width:380px; line-height:1.45; align-self:center;}
+
+.tabs{display:flex; gap:24px; margin:4px 0 18px; border-bottom:1px solid var(--hairline); flex-wrap:wrap;}
+.tab{ padding:9px 0; font-size:14.5px; color:var(--text-secondary); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; font-family:inherit;}
+.tab:hover:not(:disabled){color:var(--text);}
+.tab.active{color:var(--text); border-bottom-color:var(--text); font-weight:500;}
+.tab:disabled{color:var(--text-muted); cursor:not-allowed; opacity:.5;}
+
+.panel{background:var(--popover); border:1px solid var(--hairline); border-radius:var(--radius-card); padding:20px;}
+.panel + .panel{margin-top:16px;}
+.panel-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
+.panel-title{font-size:18px; font-weight:700; margin:0; display:flex; align-items:center;}
+.panel-sub{font-size:12.5px; color:var(--text-muted); margin:-8px 0 14px;}
+.section-label{font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin:18px 0 10px;}
+
+.aggregate{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary); flex-wrap:wrap;}
+.aggregate .segmented button{padding:5px 11px; font-size:12.5px;}
+.checkline{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-secondary);}
+.checkline input{width:auto;}
+
+.rules-head, .rule-row{ display:grid; grid-template-columns:64px 84px 1fr 190px 1fr; gap:10px; align-items:start;}
+.rules-head{padding:0 0 8px; border-bottom:2px solid var(--hairline-strong); margin-bottom:8px;}
+.rules-head span{font-size:12px; color:var(--text-secondary); font-weight:600;}
+.rule-row{padding:9px 0; align-items:center;}
+.rule-row + .rule-row{border-top:1px solid var(--hairline);}
+.field-cell{display:flex; gap:6px; align-items:center; position:relative;}
+.field-cell select, .field-cell input{flex:1;}
+.custom-toggle{ width:32px; height:32px; flex:0 0 32px; border-radius:var(--radius-control); border:1px solid var(--border-control); background:var(--panel); color:var(--text-secondary); font-size:13px; cursor:pointer;}
+.custom-toggle.active{background:var(--nav-active-bg); border-color:var(--nav-active-fg); color:var(--nav-active-fg);}
+
+.row-actions{display:flex; gap:4px;}
+.icon-btn{ width:28px; height:28px; border-radius:var(--radius-control); border:1px solid transparent; background:none; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;}
+.icon-btn:hover{background:var(--panel);}
+.icon-btn.add:hover{color:var(--good-fg);}
+.icon-btn.remove:hover{color:var(--bad-fg);}
+
+select, input[type=text]{ width:100%; background:var(--popover); border:1px solid var(--border-control); color:var(--text); border-radius:var(--radius-control); padding:7px 10px; font-size:14px; font-family:inherit; outline:none; height:34px;}
+textarea{ width:100%; background:var(--popover); border:1px solid var(--border-control); color:var(--text); border-radius:var(--radius-control); padding:9px 10px; font-size:13px; font-family:'JetBrains Mono',monospace; outline:none; resize:vertical; min-height:60px;}
+select:focus, input:focus, textarea:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(61,109,235,.15);}
+select:disabled, input:disabled{opacity:.45;}
+optgroup{color:var(--text-muted); font-style:normal; font-weight:600;}
+
+.fsearch{position:relative;}
+.fsearch-input{cursor:text;}
+.fsearch-menu{ position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:20; background:var(--popover); border:1px solid var(--border-control); border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,.16); max-height:260px; overflow:auto; padding:4px;}
+.fsearch-group{font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); padding:8px 10px 4px; font-weight:600;}
+.fsearch-item{padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13.5px; display:flex; justify-content:space-between; gap:10px; align-items:baseline;}
+.fsearch-item:hover{background:var(--panel);}
+.fsearch-item-sub{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); white-space:nowrap;}
+.fsearch-empty{padding:14px 10px; font-size:13px; color:var(--text-muted);}
+
+.add-clause{ margin-top:12px; background:none; border:none; color:var(--accent); font-size:14px; font-weight:500; cursor:pointer; padding:4px 0; font-family:inherit;}
+.add-clause:hover{text-decoration:underline;}
+
+.note{font-size:12.5px; color:var(--text-muted); margin-top:10px; line-height:1.55;}
+.note code{font-family:'JetBrains Mono',monospace; background:var(--panel); padding:1px 5px; border-radius:4px;}
+.note.warn{color:var(--warn-fg);}
+.empty-filter{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; background:var(--panel); border:1px dashed var(--border-control); border-radius:var(--radius-control); font-size:13px; color:var(--text-secondary);}
+
+.copy-btn{ background:var(--accent); color:var(--on-accent); border:1px solid var(--accent); border-radius:var(--radius-control); padding:8px 16px; height:36px; font-size:14px; font-weight:500; cursor:pointer; font-family:inherit;}
+.copy-btn:hover{background:var(--accent-hover);}
+.copy-btn.copied{background:var(--good-fg); border-color:var(--good-fg);}
+pre#jqOut{ margin:0; font-family:'JetBrains Mono',monospace; font-size:12.8px; line-height:1.65; color:var(--text); white-space:pre-wrap; word-break:break-word; background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius-control); padding:16px; max-height:340px; overflow:auto;}
+
+.tag{display:inline-block; font-size:12px; font-weight:500; padding:3px 8px; border-radius:var(--radius-tag); margin-left:10px; background:var(--tag-bg); color:var(--tag-fg);}
+.tag.trigger{background:var(--nav-active-bg); color:var(--nav-active-fg);}
+
+.block{border:1px solid var(--hairline); border-radius:var(--radius-card); background:var(--panel); padding:16px 16px 8px;}
+.block-connector{display:flex; justify-content:center; margin:4px 0;}
+.block-connector .segmented button{padding:4px 18px;}
+.block-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap;}
+.block-head .left{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.block-entity-label{font-size:12px; color:var(--text-secondary); font-weight:500;}
+.block-remove{background:none; border:1px solid var(--border-control); color:var(--text-secondary); border-radius:var(--radius-control); width:28px; height:28px; cursor:pointer;}
+.block-remove:hover{color:var(--bad-fg); border-color:var(--bad-fg);}
+
+.return-grid{display:grid; grid-template-columns:1fr; gap:14px;}
+.return-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+.return-row .gb-label{margin-bottom:0;}
+
+@media (max-width:820px){
+  .rules-head{display:none;}
+  .rule-row{grid-template-columns:1fr; gap:6px; padding:12px 0;}
+  .row-actions{order:-1; justify-content:flex-end;}
+  .globalbar, .registrybar{flex-direction:column; align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Конструктор условий jq</h1>
+      <p>Соберите условие по полям инцидента/алерта. В «Триггере» можно комбинировать условия нескольких источников через И/ИЛИ. В «Действии» фильтр необязателен, а форму возврата выбираете отдельно.</p>
+    </div>
+    <div style="display:flex; gap:8px; flex:0 0 auto;">
+      <button class="theme-toggle" id="infoToggle" title="Как устроена структура данных">ⓘ</button>
+      <button class="theme-toggle" id="themeToggle" title="Тема">🌙</button>
+    </div>
+  </header>
+
+  <div class="modal-overlay" id="infoOverlay" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <p class="modal-title">Структура данных</p>
+        <button class="icon-btn" id="infoClose" title="Закрыть">×</button>
+      </div>
+      <p class="note" style="margin-top:0;">Источники, которые вы выбираете в блоках и в «Что вернуть», — это узлы вложенной структуры инцидента. Путь конструируется от корня вниз до выбранного узла.</p>
+      <pre class="scheme">Incident
+ └─ Alerts[]
+     ├─ Observables[]
+     ├─ Assets[]
+     ├─ MITRETactics[]
+     ├─ MITRETechniques[]
+     ├─ Rules[]
+     └─ OriginalEvents[]
+         └─ BaseEvents[]</pre>
+      <p class="note">
+        <code>?</code> после <code>[]</code> означает «поле может отсутствовать» — выражение не упадёт на пустом или отсутствующем массиве, просто ничего не найдёт.<br>
+        «Область действия» определяет, с какого уровня схемы начинается путь: <b>Алерт</b> — с узла <code>Alerts[]</code> (он сам и есть текущий объект), <b>Инцидент</b> — с корня.<br>
+        «Событие (базовое)» — это <code>BaseEvents[]</code> внутри <code>OriginalEvents[]</code>, то есть два шага вниз, а не один.
+      </p>
+    </div>
+  </div>
+
+  <div class="registrybar">
+    <span class="rb-label">Реестр полей события:</span>
+    <button class="btn" id="loadRegistryBtn">Загрузить JSON…</button>
+    <button class="btn" id="saveRegistryBtn">Скачать текущий</button>
+    <input type="file" id="registryFile" accept="application/json,.json" style="display:none;">
+    <span class="rb-status" id="registryStatus">используется встроенный набор по умолчанию</span>
+  </div>
+
+  <div class="globalbar">
+    <div class="gb-group">
+      <span class="gb-label">Область действия</span>
+      <div class="segmented" id="scopeSeg"><button data-v="alert">Алерт</button><button data-v="incident">Инцидент</button></div>
+    </div>
+    <div class="gb-group">
+      <span class="gb-label">Контекст</span>
+      <div class="segmented" id="modeSeg"><button data-v="trigger">Триггер</button><button data-v="action">Действие</button></div>
+    </div>
+    <div class="gb-hint" id="ctxHint"></div>
+  </div>
+
+  <div id="actionPanel" style="display:none;">
+    <div class="panel">
+      <div class="panel-top">
+        <p class="panel-title">Действие</p>
+        <div class="return-row" style="gap:10px;">
+          <span class="gb-label">Источник</span>
+          <select id="actionEntitySelect" style="width:auto; min-width:200px;"></select>
+        </div>
+      </div>
+      <p class="note" id="entityNote" style="margin-top:-6px;"></p>
+
+      <div class="section-label">Фильтр (необязательно)</div>
+      <div id="filterArea"></div>
+
+      <div class="section-label" style="border-top:1px solid var(--hairline); padding-top:18px; margin-top:20px;">Что вернуть</div>
+      <div class="return-grid" id="returnArea"></div>
+    </div>
+  </div>
+
+  <div id="triggerPanel" style="display:none;">
+    <div id="blocks"></div>
+    <button class="add-clause" id="addBlock" style="margin-top:14px;">+ Добавить блок условий по другому источнику</button>
+  </div>
+
+  <div class="panel" style="margin-top:16px;">
+    <div class="panel-top">
+      <p class="panel-title">jq-выражение <span class="tag trigger" id="modeBadge">Триггер</span></p>
+      <button class="copy-btn" id="copyBtn">Скопировать</button>
+    </div>
+    <pre id="jqOut"></pre>
+    <p class="note warn" id="subnetNote" style="display:none;">⚠ <code>inSubnet</code> реализован через <code>def</code>-функции в начале выражения, поддерживает только IPv4.</p>
+    <p class="note">Формат загрузки/выгрузки реестра: <code>{"event": {"Группа": [{"name","label","type","values"}]}, "alert": {...}}</code>. Ключ <code>event</code> применяется сразу к обоим типам событий (корреляционные и базовые).</p>
+  </div>
+</div>
+
+<script>
+// ---------- операторы ----------
+const STR_BASE = [["equals","равно"],["notEquals","не равно"],["contains","содержит"],["notContains","не содержит"],["startsWith","начинается с"],["endsWith","заканчивается на"],["matchesRegex","соответствует regex (test)"],["notMatchesRegex","не соответствует regex"],["isEmpty","пусто"],["isNotEmpty","не пусто"]];
+const SUBNET_OPS = [["inSubnet","входит в подсеть (CIDR)"],["notInSubnet","не входит в подсеть (CIDR)"]];
+const OPS = {
+  string: STR_BASE,
+  address: STR_BASE.concat(SUBNET_OPS),
+  enum: [["equals","равно"],["notEquals","не равно"],["in","входит в список"],["notIn","не входит в список"]],
+  openEnum: [["equals","равно"],["notEquals","не равно"],["in","входит в список"],["notIn","не входит в список"]],
+  boolean: [["isTrue","истина"],["isFalse","ложь"]],
+  arrayAny: [["equals","равно (любой элемент)"],["contains","содержит (любой элемент)"]],
+  arrayEnum: [["containsValue","содержит значение"],["notContainsValue","не содержит значения"],["isEmpty","пусто"],["isNotEmpty","не пусто"]],
+};
+function defaultValueFor(meta){ return (meta.t==="enum"||meta.t==="arrayEnum"||meta.t==="openEnum") ? meta.v[0] : ""; }
+const DETECTION_TECHNOLOGIES = ["IOA","SB","AM","IOC","YARA","KUMA","CASB","URLReputation","IDS","NDR_IDS","NAD","ABAD","CloudSB"];
+
+// ---------- поля по умолчанию ----------
+const ADDR = f => ({...f, t:"address"});
+const F = (n,t) => ({n, l:n, t});
+const EVENT_GROUPS = {
+  "Идентификаторы": [ F("DeviceAssetID","string"), F("SourceAssetID","string"), F("DestinationAssetID","string"), F("CorrelationRuleName","string") ],
+  "Source": [ ADDR(F("SourceAddress","string")), F("SourceHostName","string"), F("SourceUserName","string"), F("SourceProcessName","string") ],
+  "Destination": [ ADDR(F("DestinationAddress","string")), F("DestinationHostName","string"), F("DestinationUserName","string"), F("DestinationProcessName","string") ],
+  "Device": [ ADDR(F("DeviceAddress","string")), F("DeviceHostName","string"), F("DeviceProduct","string"), F("DeviceAction","string"), F("DeviceProcessName","string") ],
+  "Файл": [ F("FileName","string"), F("FilePath","string"), F("FileHash","string"), F("OldFileName","string"), F("OldFilePath","string"), F("OldFileHash","string") ],
+  "Custom (EDR/DeviceCustom*)": [ F("DeviceCustomString1","string"), F("DeviceCustomString2","string"), F("DeviceCustomString3","string"), F("DeviceCustomString4","string"), F("DeviceCustomString5","string"), F("DeviceCustomString6","string") ],
+  "Общие": [ F("Name","string"), F("Message","string"), F("Tactic","string"), F("Technique","string"), F("RequestUrl","string") ],
+};
+const REGISTRY = {
+  incident: { label:"Инцидент", scopes:["incident"], isArray:false, pathSegs:[], groups:{ "": [
+    {n:"Severity",l:"Severity",t:"enum",v:["critical","high","medium","low"]},
+    {n:"Priority",l:"Priority",t:"enum",v:["critical","high","medium","low"]},
+    {n:"Status",l:"Status",t:"openEnum",v:["open","inProgress","hold","closed"]},
+    {n:"Name",l:"Name",t:"string"},
+    {n:"Assignee",l:"Assignee",t:"string"},
+    {n:"IsCII",l:"IsCII",t:"boolean"},
+    {n:"DetectionTechnologies",l:"DetectionTechnologies",t:"arrayEnum",v:DETECTION_TECHNOLOGIES},
+  ]}},
+  alert: { label:"Алерт", scopes:["alert","incident"], isArray:false, pathSegs:[], groups:{ "": [
+    {n:"Severity",l:"Severity",t:"enum",v:["critical","high","medium","low"]},
+    {n:"Status",l:"Status",t:"enum",v:["new","inProgress","inIncident","closed"]},
+    {n:"Name",l:"Name",t:"string"},
+    {n:"Assignee",l:"Assignee",t:"string"},
+    {n:"IsCII",l:"IsCII",t:"boolean"},
+    {n:"DetectionTechnologies",l:"DetectionTechnologies",t:"arrayEnum",v:DETECTION_TECHNOLOGIES},
+    {n:"MITRETactics[].ID",l:"MITRE Tactic",t:"arrayAny",noSub:true},
+    {n:"MITRETechniques[].ID",l:"MITRE Technique",t:"arrayAny",noSub:true},
+  ]}},
+  observable: { label:"Наблюдаемый объект", scopes:["alert","incident"], isArray:true, pathSegs:["Observables[]?"], groups:{ "": [
+    {n:"Type",l:"Type",t:"enum",v:["ip","md5","sha256","sha1","url","domain","username","hostname","localPort","remotePort","localIP","sourceIP","remoteIP","destinationIP","systemProcessID","uniqueProcessID","fileFullName","senderEmail","recipientEmail","sourceMac","destinationMac","sessionID"]},
+    ADDR({n:"Value",l:"Value"}),
+    {n:"Details",l:"Details",t:"string"},
+  ]}},
+  asset: { label:"Актив", scopes:["alert","incident"], isArray:true, pathSegs:["Assets[]?"], groups:{ "": [
+    {n:"Name",l:"Name",t:"string"},
+    {n:"Type",l:"Type",t:"enum",v:["host","user"]},
+    {n:"ID",l:"ID",t:"string"},
+    {n:"KSCServer",l:"KSCServer",t:"string"},
+    {n:"KSCServerPath",l:"KSCServerPath",t:"string"},
+    {n:"IsAttacker",l:"IsAttacker",t:"boolean"},
+    {n:"IsVictim",l:"IsVictim",t:"boolean"},
+    {n:"CIICategory",l:"CIICategory",t:"enum",v:["notCII","ciiWithoutCategory","ciiFirstCategory","ciiSecondCategory","ciiThirdCategory"]},
+  ]}},
+  rule: { label:"Правило", scopes:["alert","incident"], isArray:true, pathSegs:["Rules[]?"], groups:{ "": [
+    F("ID","string"), F("Name","string"), F("DetectionTechnology","string"), F("Type","string"),
+  ]}},
+  originalEvent: { label:"Событие (корреляционное)", scopes:["alert","incident"], isArray:true, pathSegs:["OriginalEvents[]?"],
+    note:"Путь: …OriginalEvents[]?. Общая нормализованная модель события.", groups: EVENT_GROUPS },
+  baseEvent: { label:"Событие (базовое)", scopes:["alert","incident"], isArray:true, pathSegs:["OriginalEvents[]?","BaseEvents[]?"],
+    note:"Путь: …OriginalEvents[]? | .BaseEvents[]? — вложено внутрь корреляционного события.", groups: EVENT_GROUPS },
+};
+const uid = () => Math.random().toString(36).slice(2,9);
+
+// ---------- загрузка/выгрузка реестра ----------
+document.getElementById('loadRegistryBtn').onclick = ()=> document.getElementById('registryFile').click();
+document.getElementById('registryFile').onchange = e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const json = JSON.parse(reader.result);
+      const toGroups = obj => Object.fromEntries(Object.entries(obj).map(([g,arr])=>[g, arr.map(f=>({n:f.name, l:f.label||f.name, t:f.type||"string", v:f.values}))]));
+      let touched = [];
+      for(const key of Object.keys(REGISTRY)){ if(json[key]){ REGISTRY[key].groups = toGroups(json[key]); touched.push(key); } }
+      if(json.event){ REGISTRY.originalEvent.groups = toGroups(json.event); REGISTRY.baseEvent.groups = toGroups(json.event); touched.push("event → originalEvent + baseEvent"); }
+      state.trigger.blocks = [newBlock(null)];
+      resetActionState();
+      setStatus(`загружено: ${touched.join(", ") || "совпадений по ключам не найдено"}`, touched.length?"ok":"err");
+      renderAll();
+    }catch(err){ setStatus("ошибка парсинга JSON: "+err.message, "err"); }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+};
+document.getElementById('saveRegistryBtn').onclick = ()=>{
+  const toObj = groups => Object.fromEntries(Object.entries(groups).map(([g,arr])=>[g, arr.map(f=>({name:f.n, label:f.l, type:f.t, ...(f.v?{values:f.v}:{})}))]));
+  const out = { incident: toObj(REGISTRY.incident.groups), alert: toObj(REGISTRY.alert.groups), observable: toObj(REGISTRY.observable.groups), asset: toObj(REGISTRY.asset.groups), event: toObj(REGISTRY.originalEvent.groups) };
+  const blob = new Blob([JSON.stringify(out,null,2)], {type:"application/json"});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "jq-builder-registry.json"; a.click();
+  URL.revokeObjectURL(a.href);
+};
+function setStatus(text, kind){ const el=document.getElementById('registryStatus'); el.textContent=text; el.className="rb-status"+(kind?" "+kind:""); }
+
+// ---------- инфо-модалка ----------
+const infoOverlay = document.getElementById('infoOverlay');
+document.getElementById('infoToggle').onclick = ()=>{ infoOverlay.hidden = false; };
+document.getElementById('infoClose').onclick = ()=>{ infoOverlay.hidden = true; };
+infoOverlay.addEventListener('click', e=>{ if(e.target===infoOverlay) infoOverlay.hidden = true; });
+document.addEventListener('keydown', e=>{ if(e.key==="Escape" && !infoOverlay.hidden) infoOverlay.hidden = true; });
+
+// ---------- тема ----------
+document.getElementById('themeToggle').onclick = ()=>{
+  const next = document.documentElement.dataset.theme==="dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  document.getElementById('themeToggle').textContent = next==="dark" ? "☀" : "🌙";
+};
+
+// ---------- состояние ----------
+let state = { scope:"alert", mode:"trigger", action:null, trigger:{ blocks:[] } };
+function availableEntities(){ return Object.entries(REGISTRY).filter(([k,e])=>e.scopes.includes(state.scope)); }
+function isArrayFor(entity){ const e=REGISTRY[entity]; if(entity==="alert") return state.scope==="incident"; return e.isArray; }
+function firstField(entity){ return Object.values(REGISTRY[entity].groups)[0][0]; }
+function newRow(entity, andor){ const f=firstField(entity); return { id:uid(), andor, custom:false, customName:"", customType:"string", field:f.n, op:OPS[f.t][0][0], value:defaultValueFor(f), valueCustom:false }; }
+function newBlock(andor){ const entity=availableEntities()[0][0]; return { id:uid(), andor, entity, rows:[newRow(entity,null)], agg:"any", checkLength:false }; }
+function resetActionState(){ const entity = (state.action && REGISTRY[state.action.entity] && REGISTRY[state.action.entity].scopes.includes(state.scope)) ? state.action.entity : "alert"; state.action = { entity, rows:[], returnMode:"object", returnField:firstField(entity).n, returnCustom:false, returnCustomName:"", customExpr:"", cardinality:"all", dedup:false }; }
+function fieldByName(entity, name){ for(const g of Object.values(REGISTRY[entity].groups)) for(const f of g) if(f.n===name) return f; return null; }
+function rowFieldMeta(entity, row){ if(row.custom) return { n:row.customName||"CustomField", t:row.customType, l:"custom" }; return fieldByName(entity, row.field); }
+
+// root: строка-путь. Для trigger — относительно ".", для action — начинается с "incident"/"alert".
+function getRoot(entity){
+  const scope = state.scope, mode = state.mode, e = REGISTRY[entity];
+  if(entity==="incident") return mode==="trigger" ? "" : "incident";
+  if(entity==="alert" && scope==="alert") return mode==="trigger" ? "" : "alert";
+  let segs = [];
+  if(scope==="incident") segs.push(".Alerts[]?");
+  if(entity!=="alert") segs.push(...e.pathSegs.map(s=>"."+s));
+  if(mode==="trigger") return segs.join(" | ");
+  const base = scope==="incident" ? "incident" : "alert";
+  return base + segs[0] + (segs.length>1 ? " | " + segs.slice(1).join(" | ") : "");
+}
+
+// ---------- общие виджеты ----------
+document.addEventListener('click', e=>{
+  document.querySelectorAll('.fsearch').forEach(p=>{ const m=p.querySelector('.fsearch-menu'); if(m && !p.contains(e.target)) m.hidden = true; });
+});
+function renderSegmented(id, value, onPick){
+  const el = document.getElementById(id);
+  [...el.children].forEach(b=>{ b.classList.toggle('active', b.dataset.v===value); b.onclick=()=>onPick(b.dataset.v); });
+}
+function buildFsMenu(entity, query){
+  const q = (query||"").toLowerCase();
+  let html = "";
+  for(const [g,fields] of Object.entries(REGISTRY[entity].groups)){
+    const matched = fields.filter(f=> !q || f.l.toLowerCase().includes(q) || f.n.toLowerCase().includes(q));
+    if(!matched.length) continue;
+    if(g) html += `<div class="fsearch-group">${g}</div>`;
+    html += matched.map(f=>`<div class="fsearch-item" data-field="${f.n}">${f.l}${(!f.noSub && f.l!==f.n) ? `<span class="fsearch-item-sub">${f.n}</span>` : ''}</div>`).join('');
+  }
+  return html || `<div class="fsearch-empty">Ничего не найдено</div>`;
+}
+function fieldPickerHtml(entity, fieldName, role){
+  const meta = fieldByName(entity, fieldName);
+  return `<div class="fsearch" data-role="${role}">
+    <input type="text" class="fsearch-input" data-role="fsInput" placeholder="Поиск поля…" value="${meta?meta.l:''}" autocomplete="off">
+    <div class="fsearch-menu" data-role="fsMenu" hidden></div>
+  </div>`;
+}
+function wireFieldPicker(container, role, entity, onSelect){
+  const picker = container.querySelector(`[data-role="${role}"]`); if(!picker) return;
+  const input = picker.querySelector('[data-role="fsInput"]');
+  const menu = picker.querySelector('[data-role="fsMenu"]');
+  input.addEventListener('focus', ()=>{ input.select(); menu.innerHTML = buildFsMenu(entity, ""); menu.hidden = false; });
+  input.addEventListener('input', ()=>{ menu.innerHTML = buildFsMenu(entity, input.value); menu.hidden = false; });
+  menu.addEventListener('mousedown', e=>{ const item=e.target.closest('.fsearch-item'); if(!item) return; e.preventDefault(); onSelect(item.dataset.field); menu.hidden=true; });
+}
+function valueInputHtml(row, meta){
+  if(meta.t==="boolean") return `<input type="text" value="—" disabled>`;
+  if((meta.t==="enum"||meta.t==="openEnum") && !row.custom){
+    if(row.op==="in"||row.op==="notIn") return `<input type="text" data-role="value" placeholder="high, critical" value="${row.value||''}">`;
+    const select = `<select data-role="value">${meta.v.map(v=>`<option value="${v}" ${v===row.value?'selected':''}>${v}</option>`).join('')}</select>`;
+    if(meta.t!=="openEnum") return select;
+    return `<div class="field-cell">
+      <button class="custom-toggle ${row.valueCustom?'active':''}" data-act="valuecustom" title="Своё значение">✎</button>
+      ${row.valueCustom ? `<input type="text" data-role="value" placeholder="[Значение]" value="${row.value||''}">` : select}
+    </div>`;
+  }
+  if(meta.t==="arrayEnum" && !row.custom && (row.op==="containsValue"||row.op==="notContainsValue")){
+    return `<select data-role="value">${meta.v.map(v=>`<option value="${v}" ${v===row.value?'selected':''}>${v}</option>`).join('')}</select>`;
+  }
+  if(row.op==="isEmpty"||row.op==="isNotEmpty") return `<input type="text" value="—" disabled>`;
+  if(row.op==="inSubnet"||row.op==="notInSubnet") return `<input type="text" data-role="value" placeholder="10.10.0.0/24" value="${row.value||''}">`;
+  if(row.op==="matchesRegex"||row.op==="notMatchesRegex") return `<input type="text" data-role="value" placeholder="^10\\." value="${row.value||''}">`;
+  const ph = row.custom ? "S.KL_HostIp / значение" : "[Значение]";
+  return `<input type="text" data-role="value" placeholder="${ph}" value="${row.value||''}">`;
+}
+function normalizeRow(entity, row){
+  const meta = rowFieldMeta(entity, row);
+  const ops = OPS[meta.t] || OPS.string;
+  if(!ops.find(o=>o[0]===row.op)){ row.op = ops[0][0]; row.value = defaultValueFor(meta); }
+  else if((meta.t==="enum"||meta.t==="arrayEnum") && !meta.v.includes(row.value)) row.value = meta.v[0];
+  else if(meta.t==="openEnum" && !row.valueCustom && !meta.v.includes(row.value)) row.value = meta.v[0];
+  return { meta, ops };
+}
+function rowHtml(entity, row){
+  const { meta, ops } = normalizeRow(entity, row);
+  return `
+  <div class="rule-row" data-id="${row.id}">
+    <div class="row-actions">
+      <button class="icon-btn add" title="Добавить условие" data-act="add">+</button>
+      <button class="icon-btn remove" title="Удалить" data-act="del">×</button>
+    </div>
+    <select data-role="andor" ${row.andor===null?'disabled':''}>
+      <option value="and" ${row.andor==='and'?'selected':''}>И</option>
+      <option value="or" ${row.andor==='or'?'selected':''}>ИЛИ</option>
+    </select>
+    <div class="field-cell">
+      <button class="custom-toggle ${row.custom?'active':''}" data-act="custom" title="Своё поле">✎</button>
+      ${row.custom
+        ? `<input type="text" data-role="customName" placeholder="S.KL_HostIp" value="${row.customName||''}">
+           <select data-role="customType" style="max-width:104px;">
+             <option value="string" ${row.customType==='string'?'selected':''}>Строка</option>
+             <option value="address" ${row.customType==='address'?'selected':''}>Адрес</option>
+           </select>`
+        : fieldPickerHtml(entity, row.field, `fp-${row.id}`)}
+    </div>
+    <select data-role="op">${ops.map(([v,l])=>`<option value="${v}" ${v===row.op?'selected':''}>${l}</option>`).join('')}</select>
+    ${valueInputHtml(row, meta)}
+  </div>`;
+}
+function wireRow(container, entity, row, rowsArr, onChange){
+  const el = container.querySelector(`.rule-row[data-id="${row.id}"]`);
+  el.querySelector('[data-act="add"]').onclick = ()=>{ rowsArr.splice(rowsArr.indexOf(row)+1,0,newRow(entity,'and')); onChange(); };
+  el.querySelector('[data-act="del"]').onclick = ()=>{ const i=rowsArr.indexOf(row); rowsArr.splice(i,1); if(rowsArr.length) rowsArr[0].andor=null; onChange(); };
+  el.querySelector('[data-act="custom"]').onclick = ()=>{ row.custom=!row.custom; onChange(); };
+  const andor = el.querySelector('[data-role="andor"]'); if(andor) andor.onchange = e=>{ row.andor=e.target.value; renderPreview(); };
+  wireFieldPicker(el, `fp-${row.id}`, entity, name=>{ row.field=name; const f=fieldByName(entity,name); row.op=OPS[f.t][0][0]; row.value=defaultValueFor(f); row.valueCustom=false; onChange(); });
+  const cn = el.querySelector('[data-role="customName"]'); if(cn) cn.oninput = e=>{ row.customName=e.target.value; renderPreview(); };
+  const ct = el.querySelector('[data-role="customType"]'); if(ct) ct.onchange = e=>{ row.customType=e.target.value; row.op=OPS[row.customType][0][0]; row.value=""; onChange(); };
+  el.querySelector('[data-role="op"]').onchange = e=>{ row.op=e.target.value; onChange(); };
+  const vc = el.querySelector('[data-act="valuecustom"]'); if(vc) vc.onclick = ()=>{ row.valueCustom=!row.valueCustom; row.value=""; onChange(); };
+  const valEl = el.querySelector('[data-role="value"]'); if(valEl) valEl.oninput = e=>{ row.value=e.target.value; renderPreview(); };
+}
+function renderRowsList(container, entity, rows, onChange){
+  container.innerHTML = rows.map(r=>rowHtml(entity,r)).join('');
+  rows.forEach(r=>wireRow(container, entity, r, rows, onChange));
+}
+
+// ---------- ACTION ----------
+// entityArr   — сам источник даёт несколько объектов (Observable, Asset, Alert в области Инцидент...)
+// fieldStream — выбранное поле само по себе поток (MITRETactics[].ID) — оборачивается через [...]/first(...)
+// fieldArray  — выбранное поле само по себе уже целый массив (DetectionTechnologies) — здесь first означает [0], а не first(generator)
+function actionMultiInfo(){
+  const { entity, returnMode, returnField, returnCustom } = state.action;
+  const entityArr = isArrayFor(entity);
+  let fieldStream = false, fieldArray = false;
+  if(returnMode==="field" && !returnCustom){
+    const f = fieldByName(entity, returnField);
+    if(f){ if(f.t==="arrayAny") fieldStream=true; if(f.t==="arrayEnum") fieldArray=true; }
+  }
+  return { isMulti: entityArr||fieldStream||fieldArray, entityArr, fieldStream, fieldArray };
+}
+function renderActionPanel(){
+  if(!state.action || !REGISTRY[state.action.entity].scopes.includes(state.scope)) resetActionState();
+  const sel = document.getElementById('actionEntitySelect');
+  sel.innerHTML = availableEntities().map(([k,v])=>`<option value="${k}" ${k===state.action.entity?'selected':''}>${v.label}</option>`).join('');
+  sel.onchange = e=>{ const entity=e.target.value; state.action = { entity, rows:[], returnMode:"object", returnField:firstField(entity).n, returnCustom:false, returnCustomName:"", customExpr:"", cardinality:"all", dedup:false }; renderActionPanel(); };
+
+  const entity = state.action.entity;
+  document.getElementById('entityNote').textContent = (REGISTRY[entity].note || "") + ` Путь: ${getRoot(entity) || '(текущий объект)'}`;
+
+  const filterArea = document.getElementById('filterArea');
+  if(state.action.rows.length===0){
+    filterArea.innerHTML = `<div class="empty-filter"><span>Фильтр не задан — возвращаются все объекты.</span><button class="add-clause" id="addFirstFilter" style="margin:0;">+ Добавить условие фильтрации</button></div>`;
+    document.getElementById('addFirstFilter').onclick = ()=>{ state.action.rows.push(newRow(entity, null)); renderActionPanel(); };
+  } else {
+    filterArea.innerHTML = `<div class="rules-head"><span></span><span>И/ИЛИ</span><span>Поле</span><span>Оператор</span><span>Значение</span></div><div id="rows"></div><button class="add-clause" id="addRow">+ Добавить условие</button>`;
+    renderRowsList(document.getElementById('rows'), entity, state.action.rows, renderActionPanel);
+    document.getElementById('addRow').onclick = ()=>{ state.action.rows.push(newRow(entity, 'and')); renderActionPanel(); };
+  }
+
+  const ra = document.getElementById('returnArea');
+  ra.innerHTML = `
+    <div class="return-row">
+      <span class="gb-label">Форма</span>
+      <div class="segmented" id="returnModeSeg">
+        <button data-v="object">Объект целиком</button>
+        <button data-v="field">Значение поля</button>
+        <button data-v="custom">Своё выражение</button>
+      </div>
+    </div>
+    <div id="returnFieldWrap" class="return-row" style="display:none;">
+      <span class="gb-label">Поле</span>
+      <button class="custom-toggle ${state.action.returnCustom?'active':''}" id="returnCustomToggle" title="Своё поле">✎</button>
+      <div style="max-width:340px; flex:1;" id="returnFieldSlot">
+        ${state.action.returnCustom
+          ? `<input type="text" id="returnCustomInputField" placeholder="S.KL_HostIp" value="${state.action.returnCustomName||''}">`
+          : fieldPickerHtml(entity, state.action.returnField, "returnFieldPicker")}
+      </div>
+    </div>
+    <div id="returnCustomWrap" style="display:none;">
+      <textarea id="returnCustomInput" placeholder='.S.KL_HostName + "|" + (.S.KL_HostIp | split(",")[0])'>${state.action.customExpr}</textarea>
+      <p class="note">Применяется через <code>|</code> к каждому элементу после фильтра — пишите выражение относительно текущего объекта (<code>.</code>).</p>
+    </div>
+    ${(()=>{ const multi = actionMultiInfo().isMulti; return multi ? `
+    <div class="return-row">
+      <span class="gb-label">Сколько вернуть</span>
+      <div class="segmented" id="cardinalitySeg">
+        <button data-v="all">Все совпадения (массив)</button>
+        <button data-v="first">Только первое</button>
+      </div>
+      <label class="checkline" id="dedupWrap" style="display:none;"><input type="checkbox" id="dedupChk" ${state.action.dedup?'checked':''}> убрать дубликаты (unique)</label>
+    </div>` : `<p class="note">Выбранное поле возвращает одно значение — результат не оборачивается в массив (или пусто, если фильтр не прошёл).</p>`; })()}
+  `;
+  renderSegmented('returnModeSeg', state.action.returnMode, v=>{ state.action.returnMode=v; renderActionPanel(); });
+  document.getElementById('returnFieldWrap').style.display = state.action.returnMode==="field" ? "flex" : "none";
+  document.getElementById('returnCustomWrap').style.display = state.action.returnMode==="custom" ? "block" : "none";
+  if(state.action.returnMode==="field"){
+    document.getElementById('returnCustomToggle').onclick = ()=>{ state.action.returnCustom = !state.action.returnCustom; renderActionPanel(); };
+    if(state.action.returnCustom) document.getElementById('returnCustomInputField').oninput = e=>{ state.action.returnCustomName=e.target.value; renderPreview(); };
+    else wireFieldPicker(ra, "returnFieldPicker", entity, name=>{ state.action.returnField=name; renderActionPanel(); });
+  }
+  if(state.action.returnMode==="custom") document.getElementById('returnCustomInput').oninput = e=>{ state.action.customExpr=e.target.value; renderPreview(); };
+  if(actionMultiInfo().isMulti){
+    renderSegmented('cardinalitySeg', state.action.cardinality, v=>{ state.action.cardinality=v; renderActionPanel(); });
+    const dw = document.getElementById('dedupWrap'); dw.style.display = state.action.cardinality==="all" ? "flex" : "none";
+    document.getElementById('dedupChk').onchange = e=>{ state.action.dedup=e.target.checked; renderPreview(); };
+  }
+  renderPreview();
+}
+
+// ---------- TRIGGER ----------
+function renderTriggerPanel(){
+  const wrap = document.getElementById('blocks');
+  wrap.innerHTML = state.trigger.blocks.map((b,bi)=>{
+    const isArr = isArrayFor(b.entity);
+    const connector = bi>0 ? `<div class="block-connector"><div class="segmented" data-blockandor="${b.id}"><button data-v="and" class="${b.andor==='and'?'active':''}">И</button><button data-v="or" class="${b.andor==='or'?'active':''}">ИЛИ</button></div></div>` : '';
+    const entityOptions = availableEntities().map(([k,v])=>`<option value="${k}" ${k===b.entity?'selected':''}>${v.label}</option>`).join('');
+    const aggHtml = isArr ? `
+      <div class="aggregate">
+        <span>выполняется для:</span>
+        <div class="segmented" data-agg="${b.id}">
+          <button data-v="any" class="${b.agg==='any'?'active':''}">хотя бы одного (any)</button>
+          <button data-v="all" class="${b.agg==='all'?'active':''}">всех (all)</button>
+        </div>
+        ${b.agg==='all' ? `<label class="checkline"><input type="checkbox" data-checklen="${b.id}" ${b.checkLength?'checked':''}> явная проверка length&gt;0</label>` : ''}
+      </div>` : '';
+    return `${connector}
+    <div class="block" data-id="${b.id}">
+      <div class="block-head">
+        <div class="left"><span class="block-entity-label">Источник</span><select data-role="blockEntity" style="width:auto;">${entityOptions}</select></div>
+        ${aggHtml}
+        ${state.trigger.blocks.length>1 ? `<button class="block-remove" data-act="delblock" title="Удалить блок">×</button>` : ''}
+      </div>
+      <div class="rules-head"><span></span><span>И/ИЛИ</span><span>Поле</span><span>Оператор</span><span>Значение</span></div>
+      <div class="block-rows"></div>
+      <button class="add-clause" data-act="addrow">+ Добавить условие внутри блока</button>
+      ${b.agg==='all' && isArr ? `<p class="note warn">На пустом массиве <code>all(...)</code> вернёт <code>true</code>. ${b.checkLength ? 'Проверка длины добавлена.' : 'Включите проверку выше, если это нежелательно.'}</p>` : ''}
+    </div>`;
+  }).join('');
+
+  state.trigger.blocks.forEach(b=>{
+    const blockEl = wrap.querySelector(`.block[data-id="${b.id}"]`);
+    renderRowsList(blockEl.querySelector('.block-rows'), b.entity, b.rows, renderTriggerPanel);
+    blockEl.querySelector('[data-act="addrow"]').onclick = ()=>{ b.rows.push(newRow(b.entity, b.rows.length?'and':null)); renderTriggerPanel(); };
+    const delBtn = blockEl.querySelector('[data-act="delblock"]'); if(delBtn) delBtn.onclick = ()=>{ state.trigger.blocks = state.trigger.blocks.filter(x=>x.id!==b.id); if(state.trigger.blocks.length) state.trigger.blocks[0].andor=null; renderTriggerPanel(); };
+    blockEl.querySelector('[data-role="blockEntity"]').onchange = e=>{ b.entity=e.target.value; b.rows=[newRow(b.entity,null)]; b.agg="any"; b.checkLength=false; renderTriggerPanel(); };
+    const aggSeg = wrap.querySelector(`[data-agg="${b.id}"]`); if(aggSeg) [...aggSeg.children].forEach(btn=>btn.onclick=()=>{ b.agg=btn.dataset.v; renderTriggerPanel(); });
+    const chk = wrap.querySelector(`[data-checklen="${b.id}"]`); if(chk) chk.onchange = e=>{ b.checkLength=e.target.checked; renderPreview(); };
+    const andorSeg = wrap.querySelector(`[data-blockandor="${b.id}"]`); if(andorSeg) [...andorSeg.children].forEach(btn=>btn.onclick=()=>{ b.andor=btn.dataset.v; renderTriggerPanel(); });
+  });
+
+  document.getElementById('addBlock').onclick = ()=>{ state.trigger.blocks.push(newBlock('and')); renderTriggerPanel(); };
+  renderPreview();
+}
+
+// ---------- переключатели верхнего уровня ----------
+function switchScope(v){
+  state.scope = v;
+  resetActionState();
+  state.trigger.blocks.forEach(b=>{ if(!REGISTRY[b.entity].scopes.includes(v)) b.entity="alert"; });
+  renderAll();
+}
+function switchMode(v){ state.mode = v; renderAll(); }
+function renderBadgeAndHint(){
+  document.getElementById('modeBadge').textContent = state.mode==="trigger" ? "Триггер · true/false" : "Действие · данные";
+  document.getElementById('modeBadge').className = "tag " + (state.mode==="trigger" ? "trigger" : "");
+  const hints = {
+    "alert|trigger": "Контекст — сам алерт (.). Несколько источников можно объединять через И/ИЛИ.",
+    "alert|action": "Контекст — переменная alert.",
+    "incident|trigger": "Контекст — инцидент (.), алерты — через .Alerts[]?. Несколько источников можно объединять через И/ИЛИ.",
+    "incident|action": "Контекст — переменная incident.",
+  };
+  document.getElementById('ctxHint').textContent = hints[state.scope+"|"+state.mode];
+  document.getElementById('actionPanel').style.display = state.mode==="action" ? "block" : "none";
+  document.getElementById('triggerPanel').style.display = state.mode==="trigger" ? "block" : "none";
+}
+function renderAll(){
+  renderSegmented('scopeSeg', state.scope, switchScope);
+  renderSegmented('modeSeg', state.mode, switchMode);
+  renderBadgeAndHint();
+  if(state.mode==="action") renderActionPanel(); else renderTriggerPanel();
+}
+
+// ---------- генерация jq ----------
+function jqLiteral(v, type){ if(type!=="string" && type!=="address" && type!=="openEnum" && v!=="" && !isNaN(Number(v))) return String(Number(v)); return JSON.stringify(v ?? ""); }
+let usedSubnet = false;
+function buildCondition(entity, row){
+  const meta = rowFieldMeta(entity, row);
+  if(meta.t==="arrayAny"){
+    const [arrPath, sub] = meta.n.replace("[]","").split(".");
+    const val = jqLiteral(row.value,"string");
+    if(row.op==="equals") return `any(.${arrPath}[]?; .${sub} == ${val})`;
+    if(row.op==="contains") return `any(.${arrPath}[]?; .${sub} | contains(${val}))`;
+  }
+  const path = "." + meta.n;
+  if(meta.t==="arrayEnum"){
+    const val = jqLiteral(row.value,"string");
+    switch(row.op){
+      case "containsValue": return `((${path} // []) | index(${val}) != null)`;
+      case "notContainsValue": return `((${path} // []) | index(${val}) == null)`;
+      case "isEmpty": return `((${path} // []) | length == 0)`;
+      case "isNotEmpty": return `((${path} // []) | length > 0)`;
+    }
+  }
+  if(meta.t==="boolean") return row.op==="isTrue" ? `(${path} == true)` : `(${path} == false)`;
+  if(row.op==="inSubnet"||row.op==="notInSubnet"){
+    usedSubnet = true;
+    const call = `((${path} // "") | inSubnet(${jqLiteral(row.value,"string")}))`;
+    return row.op==="inSubnet" ? call : `(${call} | not)`;
+  }
+  if(row.op==="matchesRegex") return `((${path} // "") | test(${jqLiteral(row.value,"string")}))`;
+  if(row.op==="notMatchesRegex") return `((${path} // "") | test(${jqLiteral(row.value,"string")}) | not)`;
+  const val = jqLiteral(row.value, meta.t);
+  switch(row.op){
+    case "equals": return `(${path}) == ${val}`;
+    case "notEquals": return `(${path}) != ${val}`;
+    case "contains": return `((${path} // "") | contains(${val}))`;
+    case "notContains": return `((${path} // "") | contains(${val}) | not)`;
+    case "startsWith": return `((${path} // "") | startswith(${val}))`;
+    case "endsWith": return `((${path} // "") | endswith(${val}))`;
+    case "isEmpty": return `((${path} // "") == "")`;
+    case "isNotEmpty": return `((${path} // "") != "")`;
+    case "in": { const arr = JSON.stringify((row.value||"").split(",").map(s=>s.trim()).filter(Boolean)); return `(${arr} | index(${path}) != null)`; }
+    case "notIn": { const arr = JSON.stringify((row.value||"").split(",").map(s=>s.trim()).filter(Boolean)); return `(${arr} | index(${path}) == null)`; }
+    default: return "true";
+  }
+}
+function buildRowsExpr(entity, rows){ return rows.map((r,i)=>{ const c=buildCondition(entity,r); return i===0 ? c : (r.andor==='or' ? "or " : "and ") + c; }).join(" "); }
+const SUBNET_DEFS = `def ip2int: split(".") | map(tonumber) | .[0]*16777216 + .[1]*65536 + .[2]*256 + .[3];\ndef inSubnet($cidr): . as $ip | ($cidr | split("/")) as $c | ($c[0] | ip2int) as $net | (($c[1] // "32") | tonumber) as $bits | pow(2; 32-$bits) as $block | (($ip | ip2int) / $block | floor) == ($net / $block | floor);\n`;
+
+function renderPreview(){
+  usedSubnet = false;
+  let body;
+  if(state.mode==="action"){
+    const { entity, rows, returnMode, returnField, returnCustom, returnCustomName, customExpr, cardinality, dedup } = state.action;
+    const root = getRoot(entity);
+    const { entityArr, fieldStream, fieldArray } = actionMultiInfo();
+    const parts = [root];
+    if(rows.length) parts.push(`select(${buildRowsExpr(entity, rows)})`);
+    if(returnMode==="field"){ const fname = returnCustom ? (returnCustomName||"CustomField") : fieldByName(entity, returnField).n; parts.push(`.${fname}`); }
+    else if(returnMode==="custom" && customExpr.trim()) parts.push(customExpr.trim());
+    const pipeline = parts.join(" | ");
+    if(entityArr || fieldStream){
+      // источник или само поле — поток из нескольких значений: оборачиваем в массив или берём первое из потока
+      body = cardinality==="first" ? `first(${pipeline})` : (dedup ? `[${pipeline}] | unique` : `[${pipeline}]`);
+    } else if(fieldArray){
+      // поле само по себе уже целый массив: "первое" = первый элемент массива, а не первый поток
+      body = cardinality==="first" ? `(${pipeline})[0]` : (dedup ? `(${pipeline} | unique)` : pipeline);
+    } else {
+      body = pipeline;
+    }
+  } else {
+    body = state.trigger.blocks.map((b,bi)=>{
+      const root = getRoot(b.entity), isArr = isArrayFor(b.entity);
+      const expr = buildRowsExpr(b.entity, b.rows);
+      let bb;
+      if(isArr){ bb = (b.agg==='all' && b.checkLength) ? `([${root}] | length > 0) and all(${root}; ${expr})` : `${b.agg}(${root}; ${expr})`; }
+      else { bb = root ? `${root} | (${expr})` : `(${expr})`; }
+      const wrapped = `(${bb})`;
+      return bi===0 ? wrapped : (b.andor==='or' ? "or " : "and ") + wrapped;
+    }).join(" ");
+  }
+  const jq = (usedSubnet ? SUBNET_DEFS : "") + body;
+  document.getElementById('jqOut').textContent = jq;
+  document.getElementById('subnetNote').style.display = usedSubnet ? "block" : "none";
+}
+
+document.getElementById('copyBtn').onclick = async ()=>{
+  const btn = document.getElementById('copyBtn');
+  try{ await navigator.clipboard.writeText(document.getElementById('jqOut').textContent); btn.textContent="Скопировано"; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent="Скопировать"; btn.classList.remove('copied'); },1500);}catch(e){}
+};
+
+state.trigger.blocks = [newBlock(null)];
+resetActionState();
+renderAll();
+</script>
+</body>
+</html>
