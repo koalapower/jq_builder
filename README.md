@@ -6,7 +6,7 @@
 
 ---
 
-## 🇷🇺 Русский
+## Русский
 
 **jq Builder** позволяет собирать jq-выражения с помощью визуального конструктора вместо написания их вручную.
 
@@ -40,7 +40,7 @@
 
 ---
 
-## 🇬🇧 English
+## English
 
 A web-based **jq expression builder** for use with **OSMP playbooks**.
 
