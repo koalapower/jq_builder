@@ -109,6 +109,7 @@ optgroup{color:var(--text-muted); font-style:normal; font-weight:600;}
 .fsearch-group{font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); padding:8px 10px 4px; font-weight:600;}
 .fsearch-item{padding:8px 10px; border-radius:6px; cursor:pointer; font-size:13.5px; display:flex; justify-content:space-between; gap:10px; align-items:baseline;}
 .fsearch-item:hover{background:var(--panel);}
+.fsearch-badge{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.03em; padding:1px 5px; border-radius:4px; background:var(--tag-bg); color:var(--tag-fg); margin-left:6px; }
 .fsearch-item-sub{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); white-space:nowrap;}
 .fsearch-empty{padding:14px 10px; font-size:13px; color:var(--text-muted);}
 
@@ -153,22 +154,23 @@ pre#jqOut{ margin:0; font-family:'JetBrains Mono',monospace; font-size:12.8px; l
 <div class="wrap">
   <header>
     <div>
-      <h1>Конструктор условий jq</h1>
-      <p>Соберите условие по полям инцидента/алерта. В «Триггере» можно комбинировать условия нескольких источников через И/ИЛИ. В «Действии» фильтр необязателен, а форму возврата выбираете отдельно.</p>
+      <h1 data-i18n="app_title"></h1>
+      <p data-i18n="app_subtitle"></p>
     </div>
-    <div style="display:flex; gap:8px; flex:0 0 auto;">
-      <button class="theme-toggle" id="infoToggle" title="Как устроена структура данных">ⓘ</button>
-      <button class="theme-toggle" id="themeToggle" title="Тема">🌙</button>
+    <div style="display:flex; gap:8px; flex:0 0 auto; align-items:center;">
+      <div class="segmented" id="langSeg"><button data-v="ru">RU</button><button data-v="en">EN</button></div>
+      <button class="theme-toggle" id="infoToggle" data-i18n-title="info_toggle_title">ⓘ</button>
+      <button class="theme-toggle" id="themeToggle" data-i18n-title="theme_title">🌙</button>
     </div>
   </header>
 
   <div class="modal-overlay" id="infoOverlay" hidden>
     <div class="modal-card" role="dialog" aria-modal="true">
       <div class="modal-head">
-        <p class="modal-title">Структура данных</p>
-        <button class="icon-btn" id="infoClose" title="Закрыть">×</button>
+        <p class="modal-title" data-i18n="modal_title"></p>
+        <button class="icon-btn" id="infoClose" data-i18n-title="close">×</button>
       </div>
-      <p class="note" style="margin-top:0;">Источники, которые вы выбираете в блоках и в «Что вернуть», — это узлы вложенной структуры инцидента. Путь конструируется от корня вниз до выбранного узла.</p>
+      <p class="note" style="margin-top:0;" data-i18n="modal_p1"></p>
       <pre class="scheme">Incident
  └─ Alerts[]
      ├─ Observables[]
@@ -178,30 +180,26 @@ pre#jqOut{ margin:0; font-family:'JetBrains Mono',monospace; font-size:12.8px; l
      ├─ Rules[]
      └─ OriginalEvents[]
          └─ BaseEvents[]</pre>
-      <p class="note">
-        <code>?</code> после <code>[]</code> означает «поле может отсутствовать» — выражение не упадёт на пустом или отсутствующем массиве, просто ничего не найдёт.<br>
-        «Область действия» определяет, с какого уровня схемы начинается путь: <b>Алерт</b> — с узла <code>Alerts[]</code> (он сам и есть текущий объект), <b>Инцидент</b> — с корня.<br>
-        «Событие (базовое)» — это <code>BaseEvents[]</code> внутри <code>OriginalEvents[]</code>, то есть два шага вниз, а не один.
-      </p>
+      <p class="note" id="modalP2"></p>
     </div>
   </div>
 
   <div class="registrybar">
-    <span class="rb-label">Реестр полей события:</span>
-    <button class="btn" id="loadRegistryBtn">Загрузить JSON…</button>
-    <button class="btn" id="saveRegistryBtn">Скачать текущий</button>
+    <span class="rb-label" data-i18n="registry_label"></span>
+    <button class="btn" id="loadRegistryBtn" data-i18n="load_registry"></button>
+    <button class="btn" id="saveRegistryBtn" data-i18n="save_registry"></button>
     <input type="file" id="registryFile" accept="application/json,.json" style="display:none;">
-    <span class="rb-status" id="registryStatus">используется встроенный набор по умолчанию</span>
+    <span class="rb-status" id="registryStatus"></span>
   </div>
 
   <div class="globalbar">
     <div class="gb-group">
-      <span class="gb-label">Область действия</span>
-      <div class="segmented" id="scopeSeg"><button data-v="alert">Алерт</button><button data-v="incident">Инцидент</button></div>
+      <span class="gb-label" data-i18n="scope_label"></span>
+      <div class="segmented" id="scopeSeg"><button data-v="alert" data-i18n="entity_alert"></button><button data-v="incident" data-i18n="entity_incident"></button></div>
     </div>
     <div class="gb-group">
-      <span class="gb-label">Контекст</span>
-      <div class="segmented" id="modeSeg"><button data-v="trigger">Триггер</button><button data-v="action">Действие</button></div>
+      <span class="gb-label" data-i18n="context_label"></span>
+      <div class="segmented" id="modeSeg"><button data-v="trigger" data-i18n="mode_trigger"></button><button data-v="action" data-i18n="mode_action"></button></div>
     </div>
     <div class="gb-hint" id="ctxHint"></div>
   </div>
@@ -209,50 +207,201 @@ pre#jqOut{ margin:0; font-family:'JetBrains Mono',monospace; font-size:12.8px; l
   <div id="actionPanel" style="display:none;">
     <div class="panel">
       <div class="panel-top">
-        <p class="panel-title">Действие</p>
+        <p class="panel-title" data-i18n="mode_action"></p>
         <div class="return-row" style="gap:10px;">
-          <span class="gb-label">Источник</span>
+          <span class="gb-label" data-i18n="source_label"></span>
           <select id="actionEntitySelect" style="width:auto; min-width:200px;"></select>
         </div>
       </div>
       <p class="note" id="entityNote" style="margin-top:-6px;"></p>
 
-      <div class="section-label">Фильтр (необязательно)</div>
+      <div class="section-label" data-i18n="filter_optional_label"></div>
       <div id="filterArea"></div>
 
-      <div class="section-label" style="border-top:1px solid var(--hairline); padding-top:18px; margin-top:20px;">Что вернуть</div>
+      <div class="section-label" style="border-top:1px solid var(--hairline); padding-top:18px; margin-top:20px;" data-i18n="return_label"></div>
       <div class="return-grid" id="returnArea"></div>
     </div>
   </div>
 
   <div id="triggerPanel" style="display:none;">
     <div id="blocks"></div>
-    <button class="add-clause" id="addBlock" style="margin-top:14px;">+ Добавить блок условий по другому источнику</button>
+    <button class="add-clause" id="addBlock" style="margin-top:14px;" data-i18n="add_block"></button>
   </div>
 
   <div class="panel" style="margin-top:16px;">
     <div class="panel-top">
-      <p class="panel-title">jq-выражение <span class="tag trigger" id="modeBadge">Триггер</span></p>
-      <button class="copy-btn" id="copyBtn">Скопировать</button>
+      <p class="panel-title"><span data-i18n="jq_expr_label"></span> <span class="tag trigger" id="modeBadge"></span></p>
+      <button class="copy-btn" id="copyBtn" data-i18n="copy_btn"></button>
     </div>
     <pre id="jqOut"></pre>
-    <p class="note warn" id="subnetNote" style="display:none;">⚠ <code>inSubnet</code> реализован через <code>def</code>-функции в начале выражения, поддерживает только IPv4.</p>
-    <p class="note">Формат загрузки/выгрузки реестра: <code>{"event": {"Группа": [{"name","label","type","values"}]}, "alert": {...}}</code>. Ключ <code>event</code> применяется сразу к обоим типам событий (корреляционные и базовые).</p>
+    <p class="note warn" id="subnetNote" style="display:none;"></p>
+    <p class="note" id="registryFormatNote"></p>
   </div>
 </div>
 
 <script>
-// ---------- операторы ----------
-const STR_BASE = [["equals","равно"],["notEquals","не равно"],["contains","содержит"],["notContains","не содержит"],["startsWith","начинается с"],["endsWith","заканчивается на"],["matchesRegex","соответствует regex (test)"],["notMatchesRegex","не соответствует regex"],["isEmpty","пусто"],["isNotEmpty","не пусто"]];
-const SUBNET_OPS = [["inSubnet","входит в подсеть (CIDR)"],["notInSubnet","не входит в подсеть (CIDR)"]];
+// ---------- i18n ----------
+let LANG = "ru";
+const I18N = {
+ru: {
+  app_title: "Конструктор условий jq",
+  app_subtitle: "Соберите условие по полям инцидента/алерта. В «Триггере» можно комбинировать условия нескольких источников через И/ИЛИ. В «Действии» фильтр необязателен, а форму возврата выбираете отдельно.",
+  info_toggle_title: "Как устроена структура данных",
+  theme_title: "Тема",
+  modal_title: "Структура данных",
+  close: "Закрыть",
+  modal_p1: "Источники, которые вы выбираете в блоках и в «Что вернуть», — это узлы вложенной структуры инцидента. Путь конструируется от корня вниз до выбранного узла.",
+  modal_p2: `<code>?</code> после <code>[]</code> означает «поле может отсутствовать» — выражение не упадёт на пустом или отсутствующем массиве, просто ничего не найдёт.<br>«Область действия» определяет, с какого уровня схемы начинается путь: <b>Алерт</b> — с узла <code>Alerts[]</code> (он сам и есть текущий объект), <b>Инцидент</b> — с корня.<br>«Событие (базовое)» — это <code>BaseEvents[]</code> внутри <code>OriginalEvents[]</code>, то есть два шага вниз, а не один.`,
+  registry_label: "Реестр полей события:",
+  load_registry: "Загрузить JSON…",
+  save_registry: "Скачать текущий",
+  registry_default_status: "используется встроенный набор по умолчанию",
+  scope_label: "Область действия",
+  context_label: "Контекст",
+  source_label: "Источник",
+  filter_optional_label: "Фильтр (необязательно)",
+  return_label: "Что вернуть",
+  add_block: "+ Добавить блок условий по другому источнику",
+  jq_expr_label: "jq-выражение",
+  copy_btn: "Скопировать",
+  copied_btn: "Скопировано",
+  path_label: "Путь",
+  current_object: "текущий объект",
+  subnet_note_html: `⚠ <code>inSubnet</code> реализован через <code>def</code>-функции в начале выражения, поддерживает только IPv4.`,
+  registry_format_note_html: `Формат загрузки/выгрузки реестра: <code>{"event": {"Группа": [{"name","label","type","values"}]}, "alert": {...}}</code>. Ключ <code>event</code> применяется сразу к обоим типам событий (корреляционные и базовые).`,
+  entity_incident: "Инцидент",
+  entity_alert: "Алерт",
+  entity_observable: "Наблюдаемый объект",
+  entity_asset: "Актив",
+  entity_rule: "Правило",
+  entity_originalEvent: "Событие (корреляционное)",
+  entity_baseEvent: "Событие (базовое)",
+  note_originalEvent: "Общая нормализованная модель события.",
+  note_baseEvent: "Вложено внутрь корреляционного события.",
+  group_identifiers: "Идентификаторы", group_source: "Source", group_destination: "Destination", group_device: "Device", group_processes: "Процессы", group_hashes: "Хэши", group_files: "Файлы", group_network: "URL и сеть", group_ioa: "IoA", group_custom: "Custom (DeviceCustom*)", group_general: "Общие",
+  mode_trigger: "Триггер", mode_action: "Действие",
+  mode_badge_trigger: "Триггер · true/false", mode_badge_action: "Действие · данные",
+  ctx_hint_alert_trigger: "Контекст — сам алерт (.). Несколько источников можно объединять через И/ИЛИ.",
+  ctx_hint_alert_action: "Контекст — переменная alert.",
+  ctx_hint_incident_trigger: "Контекст — инцидент (.), алерты — через .Alerts[]?. Несколько источников можно объединять через И/ИЛИ.",
+  ctx_hint_incident_action: "Контекст — переменная incident.",
+  and_or_label: "И/ИЛИ", field_label: "Поле", operator_label: "Оператор", value_label: "Значение",
+  and_option: "И", or_option: "ИЛИ",
+  add_condition: "+ Добавить условие", add_condition_block: "+ Добавить условие внутри блока", add_filter_condition: "+ Добавить условие фильтрации",
+  remove_title: "Удалить", add_title: "Добавить условие", remove_block_title: "Удалить блок",
+  custom_field_title: "Своё поле", custom_value_title: "Своё значение",
+  type_string: "Строка", type_address: "Адрес",
+  search_field_placeholder: "Поиск поля…", no_results: "Ничего не найдено",
+  no_filter_note: "Фильтр не задан — возвращаются все объекты.",
+  form_label: "Форма", object_mode: "Объект целиком", field_mode: "Значение поля", custom_mode: "Своё выражение",
+  field_label2: "Поле",
+  custom_expr_note: "Применяется через <code>|</code> к каждому элементу после фильтра — пишите выражение относительно текущего объекта (<code>.</code>).",
+  how_many_label: "Сколько вернуть", all_matches: "Все совпадения (массив)", first_only: "Только первое", dedup_label: "убрать дубликаты (unique)",
+  single_value_note: "Выбранное поле возвращает одно значение — результат не оборачивается в массив (или пусто, если фильтр не прошёл).",
+  applies_to_label: "выполняется для:", agg_any: "хотя бы одного (any)", agg_all: "всех (all)", length_check_label: "явная проверка length&gt;0",
+  empty_all_warn: "На пустом массиве <code>all(...)</code> вернёт <code>true</code>.",
+  length_check_added: "Проверка длины добавлена.", length_check_suggest: "Включите проверку выше, если это нежелательно.",
+  loaded_prefix: "загружено", no_keys_found: "совпадений по ключам не найдено", parse_error: "ошибка парсинга JSON: ",
+  op_equals:"равно", op_notEquals:"не равно", op_contains:"содержит", op_notContains:"не содержит", op_startsWith:"начинается с", op_endsWith:"заканчивается на",
+  op_matchesRegex:"соответствует regex (test)", op_notMatchesRegex:"не соответствует regex", op_isEmpty:"пусто", op_isNotEmpty:"не пусто",
+  op_inSubnet:"входит в подсеть (CIDR)", op_notInSubnet:"не входит в подсеть (CIDR)", op_in:"входит в список", op_notIn:"не входит в список",
+  op_isTrue:"истина", op_isFalse:"ложь", op_equalsAny:"равно (любой элемент)", op_containsAny:"содержит (любой элемент)",
+  op_containsValue:"содержит значение", op_notContainsValue:"не содержит значения",
+  op_anyContains:"любой элемент содержит подстроку", op_noneContains:"ни один элемент не содержит подстроку", op_anyMatchesRegex:"любой элемент соответствует regex",
+},
+en: {
+  app_title: "jq Condition Builder",
+  app_subtitle: "Build a condition from incident/alert fields. In \u201CTrigger\u201D you can combine conditions from several sources with AND/OR. In \u201CAction\u201D the filter is optional, and you choose the return shape separately.",
+  info_toggle_title: "How the data structure works",
+  theme_title: "Theme",
+  modal_title: "Data structure",
+  close: "Close",
+  modal_p1: "The sources you pick in blocks and in \u201CWhat to return\u201D are nodes of the incident's nested structure. The path is built from the root down to the chosen node.",
+  modal_p2: `<code>?</code> after <code>[]</code> means \u201Cthe field may be missing\u201D — the expression won't fail on an empty or missing array, it'll just find nothing.<br>\u201CScope\u201D determines which level of the scheme the path starts from: <b>Alert</b> — starts at the <code>Alerts[]</code> node (it is itself the current object), <b>Incident</b> — starts at the root.<br>\u201CEvent (Base)\u201D is <code>BaseEvents[]</code> inside <code>OriginalEvents[]</code> — two steps down, not one.`,
+  registry_label: "Event field registry:",
+  load_registry: "Load JSON…",
+  save_registry: "Download current",
+  registry_default_status: "using the built-in default set",
+  scope_label: "Scope",
+  context_label: "Context",
+  source_label: "Source",
+  filter_optional_label: "Filter (optional)",
+  return_label: "What to return",
+  add_block: "+ Add a condition block for another source",
+  jq_expr_label: "jq expression",
+  copy_btn: "Copy",
+  copied_btn: "Copied",
+  path_label: "Path",
+  current_object: "current object",
+  subnet_note_html: `⚠ <code>inSubnet</code> is implemented via <code>def</code> functions at the start of the expression, IPv4 only.`,
+  registry_format_note_html: `Registry load/save format: <code>{"event": {"Group": [{"name","label","type","values"}]}, "alert": {...}}</code>. The <code>event</code> key applies to both event types at once (correlation and base).`,
+  entity_incident: "Incident",
+  entity_alert: "Alert",
+  entity_observable: "Observable",
+  entity_asset: "Asset",
+  entity_rule: "Rule",
+  entity_originalEvent: "Event (Correlation)",
+  entity_baseEvent: "Event (Base)",
+  note_originalEvent: "Shared normalized event model.",
+  note_baseEvent: "Nested inside the correlation event.",
+  group_identifiers: "Identifiers", group_source: "Source", group_destination: "Destination", group_device: "Device", group_processes: "Processes", group_hashes: "Hashes", group_files: "Files", group_network: "URL & Network", group_ioa: "IoA", group_custom: "Custom (DeviceCustom*)", group_general: "General",
+  mode_trigger: "Trigger", mode_action: "Action",
+  mode_badge_trigger: "Trigger · true/false", mode_badge_action: "Action · data",
+  ctx_hint_alert_trigger: "Context is the alert itself (.). Several sources can be combined with AND/OR.",
+  ctx_hint_alert_action: "Context is the alert variable.",
+  ctx_hint_incident_trigger: "Context is the incident (.), alerts via .Alerts[]?. Several sources can be combined with AND/OR.",
+  ctx_hint_incident_action: "Context is the incident variable.",
+  and_or_label: "AND/OR", field_label: "Field", operator_label: "Operator", value_label: "Value",
+  and_option: "AND", or_option: "OR",
+  add_condition: "+ Add condition", add_condition_block: "+ Add condition inside block", add_filter_condition: "+ Add filter condition",
+  remove_title: "Remove", add_title: "Add condition", remove_block_title: "Remove block",
+  custom_field_title: "Custom field", custom_value_title: "Custom value",
+  type_string: "String", type_address: "Address",
+  search_field_placeholder: "Search field…", no_results: "Nothing found",
+  no_filter_note: "No filter set — all objects are returned.",
+  form_label: "Form", object_mode: "Whole object", field_mode: "Field value", custom_mode: "Custom expression",
+  field_label2: "Field",
+  custom_expr_note: "Applied via <code>|</code> to each item after the filter — write the expression relative to the current object (<code>.</code>).",
+  how_many_label: "How many to return", all_matches: "All matches (array)", first_only: "First match only", dedup_label: "remove duplicates (unique)",
+  single_value_note: "The selected field returns a single value — the result isn't wrapped in an array (or empty if the filter doesn't match).",
+  applies_to_label: "applies to:", agg_any: "at least one (any)", agg_all: "all (all)", length_check_label: "explicit length&gt;0 check",
+  empty_all_warn: "On an empty array <code>all(...)</code> returns <code>true</code>.",
+  length_check_added: "Length check added.", length_check_suggest: "Enable the check above if this isn't desired.",
+  loaded_prefix: "loaded", no_keys_found: "no matching keys found", parse_error: "JSON parse error: ",
+  op_equals:"equals", op_notEquals:"not equals", op_contains:"contains", op_notContains:"does not contain", op_startsWith:"starts with", op_endsWith:"ends with",
+  op_matchesRegex:"matches regex (test)", op_notMatchesRegex:"does not match regex", op_isEmpty:"empty", op_isNotEmpty:"not empty",
+  op_inSubnet:"in subnet (CIDR)", op_notInSubnet:"not in subnet (CIDR)", op_in:"in list", op_notIn:"not in list",
+  op_isTrue:"true", op_isFalse:"false", op_equalsAny:"equals (any element)", op_containsAny:"contains (any element)",
+  op_containsValue:"contains value", op_notContainsValue:"does not contain value",
+  op_anyContains:"any element contains substring", op_noneContains:"no element contains substring", op_anyMatchesRegex:"any element matches regex",
+},
+};
+function t(key){ return (I18N[LANG] && I18N[LANG][key]) || I18N.ru[key] || key; }
+function applyStaticI18n(){
+  document.documentElement.lang = LANG;
+  document.title = t('app_title');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); });
+  document.getElementById('modalP2').innerHTML = t('modal_p2');
+  document.getElementById('subnetNote').innerHTML = t('subnet_note_html');
+  document.getElementById('registryFormatNote').innerHTML = t('registry_format_note_html');
+  if(registryIsDefault) setStatus(t('registry_default_status'));
+  document.getElementById('themeToggle').textContent = document.documentElement.dataset.theme==="dark" ? "☀" : "🌙";
+  [...document.getElementById('langSeg').children].forEach(b=>b.classList.toggle('active', b.dataset.v===LANG));
+}
+
+// ---------- операторы (коды; подписи — в I18N.op_*) ----------
+const STR_BASE = ["equals","notEquals","contains","notContains","startsWith","endsWith","matchesRegex","notMatchesRegex","isEmpty","isNotEmpty"];
+const SUBNET_OPS = ["inSubnet","notInSubnet"];
 const OPS = {
   string: STR_BASE,
   address: STR_BASE.concat(SUBNET_OPS),
-  enum: [["equals","равно"],["notEquals","не равно"],["in","входит в список"],["notIn","не входит в список"]],
-  openEnum: [["equals","равно"],["notEquals","не равно"],["in","входит в список"],["notIn","не входит в список"]],
-  boolean: [["isTrue","истина"],["isFalse","ложь"]],
-  arrayAny: [["equals","равно (любой элемент)"],["contains","содержит (любой элемент)"]],
-  arrayEnum: [["containsValue","содержит значение"],["notContainsValue","не содержит значения"],["isEmpty","пусто"],["isNotEmpty","не пусто"]],
+  enum: ["equals","notEquals","in","notIn"],
+  openEnum: ["equals","notEquals","in","notIn"],
+  boolean: ["isTrue","isFalse"],
+  arrayAny: ["equalsAny","containsAny"],
+  arrayEnum: ["containsValue","notContainsValue","isEmpty","isNotEmpty"],
+  stringArray: ["containsValue","notContainsValue","anyContains","noneContains","anyMatchesRegex","isEmpty","isNotEmpty"],
 };
 function defaultValueFor(meta){ return (meta.t==="enum"||meta.t==="arrayEnum"||meta.t==="openEnum") ? meta.v[0] : ""; }
 const DETECTION_TECHNOLOGIES = ["IOA","SB","AM","IOC","YARA","KUMA","CASB","URLReputation","IDS","NDR_IDS","NAD","ABAD","CloudSB"];
@@ -260,17 +409,32 @@ const DETECTION_TECHNOLOGIES = ["IOA","SB","AM","IOC","YARA","KUMA","CASB","URLR
 // ---------- поля по умолчанию ----------
 const ADDR = f => ({...f, t:"address"});
 const F = (n,t) => ({n, l:n, t});
+const EDR = (n,t) => ({n, l:n.replace(/^SA?\.KL_/,""), t, badge:"EDR", noSub:true});
 const EVENT_GROUPS = {
-  "Идентификаторы": [ F("DeviceAssetID","string"), F("SourceAssetID","string"), F("DestinationAssetID","string"), F("CorrelationRuleName","string") ],
-  "Source": [ ADDR(F("SourceAddress","string")), F("SourceHostName","string"), F("SourceUserName","string"), F("SourceProcessName","string") ],
-  "Destination": [ ADDR(F("DestinationAddress","string")), F("DestinationHostName","string"), F("DestinationUserName","string"), F("DestinationProcessName","string") ],
-  "Device": [ ADDR(F("DeviceAddress","string")), F("DeviceHostName","string"), F("DeviceProduct","string"), F("DeviceAction","string"), F("DeviceProcessName","string") ],
-  "Файл": [ F("FileName","string"), F("FilePath","string"), F("FileHash","string"), F("OldFileName","string"), F("OldFilePath","string"), F("OldFileHash","string") ],
-  "Custom (EDR/DeviceCustom*)": [ F("DeviceCustomString1","string"), F("DeviceCustomString2","string"), F("DeviceCustomString3","string"), F("DeviceCustomString4","string"), F("DeviceCustomString5","string"), F("DeviceCustomString6","string") ],
-  "Общие": [ F("Name","string"), F("Message","string"), F("Tactic","string"), F("Technique","string"), F("RequestUrl","string") ],
+  "identifiers": [ F("DeviceAssetID","string"), F("SourceAssetID","string"), F("DestinationAssetID","string"), F("CorrelationRuleName","string") ],
+  "device": [
+    ADDR(F("DeviceAddress","string")), F("DeviceHostName","string"), F("DeviceProduct","string"), F("DeviceAction","string"),
+    ADDR(EDR("S.KL_HostIp","string")), EDR("S.KL_HostName","string"), EDR("S.KL_HostOsFamily","string"), EDR("S.KL_HostOsName","string"), EDR("S.KL_HostOsVersion","string"),
+  ],
+  "source": [ ADDR(F("SourceAddress","string")), F("SourceHostName","string"), F("SourceUserName","string") ],
+  "destination": [ ADDR(F("DestinationAddress","string")), F("DestinationHostName","string"), F("DestinationUserName","string") ],
+  "processes": [
+    F("DeviceProcessName","string"), F("SourceProcessName","string"), F("DestinationProcessName","string"),
+    EDR("S.KL_ProcessCmdline","string"), EDR("S.KL_ProcessFileFullname","string"), EDR("S.KL_ProcessFileName","string"), EDR("S.KL_ProcessFilePath","string"), EDR("S.KL_ProcessUserName","string"),
+    EDR("S.KL_ParentProcessCmdline","string"), EDR("S.KL_ParentProcessFileFullname","string"), EDR("S.KL_ParentProcessFileName","string"), EDR("S.KL_ParentProcessFilePath","string"), EDR("S.KL_ParentProcessUserName","string"),
+  ],
+  "hashes": [
+    F("FileHash","string"), F("OldFileHash","string"),
+    EDR("S.KL_ProcessFileMd5","string"), EDR("S.KL_ProcessFileSha256","string"), EDR("S.KL_ParentProcessFileMd5","string"), EDR("S.KL_ParentProcessFileSha256","string"),
+  ],
+  "files": [ F("FileName","string"), F("FilePath","string"), F("OldFileName","string"), F("OldFilePath","string") ],
+  "network": [ F("RequestUrl","string"), EDR("S.KL_NetUri","string"), EDR("S.KL_NetUrlHostname","string") ],
+  "ioa": [ EDR("SA.KL_IoAId","stringArray"), EDR("SA.KL_IoAName","stringArray") ],
+  "custom": [ F("DeviceCustomString1","string"), F("DeviceCustomString2","string"), F("DeviceCustomString3","string"), F("DeviceCustomString4","string"), F("DeviceCustomString5","string"), F("DeviceCustomString6","string") ],
+  "general": [ F("Name","string"), F("Message","string"), F("Tactic","string"), F("Technique","string") ],
 };
 const REGISTRY = {
-  incident: { label:"Инцидент", scopes:["incident"], isArray:false, pathSegs:[], groups:{ "": [
+  incident: { scopes:["incident"], isArray:false, pathSegs:[], groups:{ "": [
     {n:"Severity",l:"Severity",t:"enum",v:["critical","high","medium","low"]},
     {n:"Priority",l:"Priority",t:"enum",v:["critical","high","medium","low"]},
     {n:"Status",l:"Status",t:"openEnum",v:["open","inProgress","hold","closed"]},
@@ -279,7 +443,7 @@ const REGISTRY = {
     {n:"IsCII",l:"IsCII",t:"boolean"},
     {n:"DetectionTechnologies",l:"DetectionTechnologies",t:"arrayEnum",v:DETECTION_TECHNOLOGIES},
   ]}},
-  alert: { label:"Алерт", scopes:["alert","incident"], isArray:false, pathSegs:[], groups:{ "": [
+  alert: { scopes:["alert","incident"], isArray:false, pathSegs:[], groups:{ "": [
     {n:"Severity",l:"Severity",t:"enum",v:["critical","high","medium","low"]},
     {n:"Status",l:"Status",t:"enum",v:["new","inProgress","inIncident","closed"]},
     {n:"Name",l:"Name",t:"string"},
@@ -289,12 +453,12 @@ const REGISTRY = {
     {n:"MITRETactics[].ID",l:"MITRE Tactic",t:"arrayAny",noSub:true},
     {n:"MITRETechniques[].ID",l:"MITRE Technique",t:"arrayAny",noSub:true},
   ]}},
-  observable: { label:"Наблюдаемый объект", scopes:["alert","incident"], isArray:true, pathSegs:["Observables[]?"], groups:{ "": [
+  observable: { scopes:["alert","incident"], isArray:true, pathSegs:["Observables[]?"], groups:{ "": [
     {n:"Type",l:"Type",t:"enum",v:["ip","md5","sha256","sha1","url","domain","username","hostname","localPort","remotePort","localIP","sourceIP","remoteIP","destinationIP","systemProcessID","uniqueProcessID","fileFullName","senderEmail","recipientEmail","sourceMac","destinationMac","sessionID"]},
     ADDR({n:"Value",l:"Value"}),
     {n:"Details",l:"Details",t:"string"},
   ]}},
-  asset: { label:"Актив", scopes:["alert","incident"], isArray:true, pathSegs:["Assets[]?"], groups:{ "": [
+  asset: { scopes:["alert","incident"], isArray:true, pathSegs:["Assets[]?"], groups:{ "": [
     {n:"Name",l:"Name",t:"string"},
     {n:"Type",l:"Type",t:"enum",v:["host","user"]},
     {n:"ID",l:"ID",t:"string"},
@@ -304,14 +468,15 @@ const REGISTRY = {
     {n:"IsVictim",l:"IsVictim",t:"boolean"},
     {n:"CIICategory",l:"CIICategory",t:"enum",v:["notCII","ciiWithoutCategory","ciiFirstCategory","ciiSecondCategory","ciiThirdCategory"]},
   ]}},
-  rule: { label:"Правило", scopes:["alert","incident"], isArray:true, pathSegs:["Rules[]?"], groups:{ "": [
+  rule: { scopes:["alert","incident"], isArray:true, pathSegs:["Rules[]?"], groups:{ "": [
     F("ID","string"), F("Name","string"), F("DetectionTechnology","string"), F("Type","string"),
   ]}},
-  originalEvent: { label:"Событие (корреляционное)", scopes:["alert","incident"], isArray:true, pathSegs:["OriginalEvents[]?"],
-    note:"Путь: …OriginalEvents[]?. Общая нормализованная модель события.", groups: EVENT_GROUPS },
-  baseEvent: { label:"Событие (базовое)", scopes:["alert","incident"], isArray:true, pathSegs:["OriginalEvents[]?","BaseEvents[]?"],
-    note:"Путь: …OriginalEvents[]? | .BaseEvents[]? — вложено внутрь корреляционного события.", groups: EVENT_GROUPS },
+  originalEvent: { scopes:["alert","incident"], isArray:true, pathSegs:["OriginalEvents[]?"],
+    noteKey:"note_originalEvent", groups: EVENT_GROUPS },
+  baseEvent: { scopes:["alert","incident"], isArray:true, pathSegs:["OriginalEvents[]?","BaseEvents[]?"],
+    noteKey:"note_baseEvent", groups: EVENT_GROUPS },
 };
+function entityLabel(k){ return t('entity_'+k); }
 const uid = () => Math.random().toString(36).slice(2,9);
 
 // ---------- загрузка/выгрузка реестра ----------
@@ -328,9 +493,10 @@ document.getElementById('registryFile').onchange = e=>{
       if(json.event){ REGISTRY.originalEvent.groups = toGroups(json.event); REGISTRY.baseEvent.groups = toGroups(json.event); touched.push("event → originalEvent + baseEvent"); }
       state.trigger.blocks = [newBlock(null)];
       resetActionState();
-      setStatus(`загружено: ${touched.join(", ") || "совпадений по ключам не найдено"}`, touched.length?"ok":"err");
+      registryIsDefault = false;
+      setStatus(`${t('loaded_prefix')}: ${touched.join(", ") || t('no_keys_found')}`, touched.length?"ok":"err");
       renderAll();
-    }catch(err){ setStatus("ошибка парсинга JSON: "+err.message, "err"); }
+    }catch(err){ setStatus(t('parse_error')+err.message, "err"); }
   };
   reader.readAsText(file);
   e.target.value = "";
@@ -342,6 +508,7 @@ document.getElementById('saveRegistryBtn').onclick = ()=>{
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "jq-builder-registry.json"; a.click();
   URL.revokeObjectURL(a.href);
 };
+let registryIsDefault = true;
 function setStatus(text, kind){ const el=document.getElementById('registryStatus'); el.textContent=text; el.className="rb-status"+(kind?" "+kind:""); }
 
 // ---------- инфо-модалка ----------
@@ -358,12 +525,17 @@ document.getElementById('themeToggle').onclick = ()=>{
   document.getElementById('themeToggle').textContent = next==="dark" ? "☀" : "🌙";
 };
 
+// ---------- язык ----------
+[...document.getElementById('langSeg').children].forEach(b=>{
+  b.onclick = ()=>{ LANG = b.dataset.v; applyStaticI18n(); renderAll(); };
+});
+
 // ---------- состояние ----------
 let state = { scope:"alert", mode:"trigger", action:null, trigger:{ blocks:[] } };
 function availableEntities(){ return Object.entries(REGISTRY).filter(([k,e])=>e.scopes.includes(state.scope)); }
 function isArrayFor(entity){ const e=REGISTRY[entity]; if(entity==="alert") return state.scope==="incident"; return e.isArray; }
 function firstField(entity){ return Object.values(REGISTRY[entity].groups)[0][0]; }
-function newRow(entity, andor){ const f=firstField(entity); return { id:uid(), andor, custom:false, customName:"", customType:"string", field:f.n, op:OPS[f.t][0][0], value:defaultValueFor(f), valueCustom:false }; }
+function newRow(entity, andor){ const f=firstField(entity); return { id:uid(), andor, custom:false, customName:"", customType:"string", field:f.n, op:OPS[f.t][0], value:defaultValueFor(f), valueCustom:false }; }
 function newBlock(andor){ const entity=availableEntities()[0][0]; return { id:uid(), andor, entity, rows:[newRow(entity,null)], agg:"any", checkLength:false }; }
 function resetActionState(){ const entity = (state.action && REGISTRY[state.action.entity] && REGISTRY[state.action.entity].scopes.includes(state.scope)) ? state.action.entity : "alert"; state.action = { entity, rows:[], returnMode:"object", returnField:firstField(entity).n, returnCustom:false, returnCustomName:"", customExpr:"", cardinality:"all", dedup:false }; }
 function fieldByName(entity, name){ for(const g of Object.values(REGISTRY[entity].groups)) for(const f of g) if(f.n===name) return f; return null; }
@@ -396,15 +568,15 @@ function buildFsMenu(entity, query){
   for(const [g,fields] of Object.entries(REGISTRY[entity].groups)){
     const matched = fields.filter(f=> !q || f.l.toLowerCase().includes(q) || f.n.toLowerCase().includes(q));
     if(!matched.length) continue;
-    if(g) html += `<div class="fsearch-group">${g}</div>`;
-    html += matched.map(f=>`<div class="fsearch-item" data-field="${f.n}">${f.l}${(!f.noSub && f.l!==f.n) ? `<span class="fsearch-item-sub">${f.n}</span>` : ''}</div>`).join('');
+    if(g) html += `<div class="fsearch-group">${t('group_'+g)}</div>`;
+    html += matched.map(f=>`<div class="fsearch-item" data-field="${f.n}"><span>${f.l}${f.badge ? `<span class="fsearch-badge">${f.badge}</span>` : ''}</span>${(!f.noSub && f.l!==f.n) ? `<span class="fsearch-item-sub">${f.n}</span>` : ''}</div>`).join('');
   }
-  return html || `<div class="fsearch-empty">Ничего не найдено</div>`;
+  return html || `<div class="fsearch-empty">${t('no_results')}</div>`;
 }
 function fieldPickerHtml(entity, fieldName, role){
   const meta = fieldByName(entity, fieldName);
   return `<div class="fsearch" data-role="${role}">
-    <input type="text" class="fsearch-input" data-role="fsInput" placeholder="Поиск поля…" value="${meta?meta.l:''}" autocomplete="off">
+    <input type="text" class="fsearch-input" data-role="fsInput" placeholder="${t('search_field_placeholder')}" value="${meta?meta.l:''}" autocomplete="off">
     <div class="fsearch-menu" data-role="fsMenu" hidden></div>
   </div>`;
 }
@@ -423,8 +595,8 @@ function valueInputHtml(row, meta){
     const select = `<select data-role="value">${meta.v.map(v=>`<option value="${v}" ${v===row.value?'selected':''}>${v}</option>`).join('')}</select>`;
     if(meta.t!=="openEnum") return select;
     return `<div class="field-cell">
-      <button class="custom-toggle ${row.valueCustom?'active':''}" data-act="valuecustom" title="Своё значение">✎</button>
-      ${row.valueCustom ? `<input type="text" data-role="value" placeholder="[Значение]" value="${row.value||''}">` : select}
+      <button class="custom-toggle ${row.valueCustom?'active':''}" data-act="valuecustom" title="${t('custom_value_title')}">✎</button>
+      ${row.valueCustom ? `<input type="text" data-role="value" placeholder="[${t('value_label')}]" value="${row.value||''}">` : select}
     </div>`;
   }
   if(meta.t==="arrayEnum" && !row.custom && (row.op==="containsValue"||row.op==="notContainsValue")){
@@ -432,14 +604,14 @@ function valueInputHtml(row, meta){
   }
   if(row.op==="isEmpty"||row.op==="isNotEmpty") return `<input type="text" value="—" disabled>`;
   if(row.op==="inSubnet"||row.op==="notInSubnet") return `<input type="text" data-role="value" placeholder="10.10.0.0/24" value="${row.value||''}">`;
-  if(row.op==="matchesRegex"||row.op==="notMatchesRegex") return `<input type="text" data-role="value" placeholder="^10\\." value="${row.value||''}">`;
-  const ph = row.custom ? "S.KL_HostIp / значение" : "[Значение]";
+  if(row.op==="matchesRegex"||row.op==="notMatchesRegex"||row.op==="anyMatchesRegex") return `<input type="text" data-role="value" placeholder="^10\\." value="${row.value||''}">`;
+  const ph = row.custom ? `S.KL_HostIp / ${t('value_label').toLowerCase()}` : `[${t('value_label')}]`;
   return `<input type="text" data-role="value" placeholder="${ph}" value="${row.value||''}">`;
 }
 function normalizeRow(entity, row){
   const meta = rowFieldMeta(entity, row);
   const ops = OPS[meta.t] || OPS.string;
-  if(!ops.find(o=>o[0]===row.op)){ row.op = ops[0][0]; row.value = defaultValueFor(meta); }
+  if(!ops.includes(row.op)){ row.op = ops[0]; row.value = defaultValueFor(meta); }
   else if((meta.t==="enum"||meta.t==="arrayEnum") && !meta.v.includes(row.value)) row.value = meta.v[0];
   else if(meta.t==="openEnum" && !row.valueCustom && !meta.v.includes(row.value)) row.value = meta.v[0];
   return { meta, ops };
@@ -449,24 +621,24 @@ function rowHtml(entity, row){
   return `
   <div class="rule-row" data-id="${row.id}">
     <div class="row-actions">
-      <button class="icon-btn add" title="Добавить условие" data-act="add">+</button>
-      <button class="icon-btn remove" title="Удалить" data-act="del">×</button>
+      <button class="icon-btn add" title="${t('add_title')}" data-act="add">+</button>
+      <button class="icon-btn remove" title="${t('remove_title')}" data-act="del">×</button>
     </div>
     <select data-role="andor" ${row.andor===null?'disabled':''}>
-      <option value="and" ${row.andor==='and'?'selected':''}>И</option>
-      <option value="or" ${row.andor==='or'?'selected':''}>ИЛИ</option>
+      <option value="and" ${row.andor==='and'?'selected':''}>${t('and_option')}</option>
+      <option value="or" ${row.andor==='or'?'selected':''}>${t('or_option')}</option>
     </select>
     <div class="field-cell">
-      <button class="custom-toggle ${row.custom?'active':''}" data-act="custom" title="Своё поле">✎</button>
+      <button class="custom-toggle ${row.custom?'active':''}" data-act="custom" title="${t('custom_field_title')}">✎</button>
       ${row.custom
         ? `<input type="text" data-role="customName" placeholder="S.KL_HostIp" value="${row.customName||''}">
            <select data-role="customType" style="max-width:104px;">
-             <option value="string" ${row.customType==='string'?'selected':''}>Строка</option>
-             <option value="address" ${row.customType==='address'?'selected':''}>Адрес</option>
+             <option value="string" ${row.customType==='string'?'selected':''}>${t('type_string')}</option>
+             <option value="address" ${row.customType==='address'?'selected':''}>${t('type_address')}</option>
            </select>`
         : fieldPickerHtml(entity, row.field, `fp-${row.id}`)}
     </div>
-    <select data-role="op">${ops.map(([v,l])=>`<option value="${v}" ${v===row.op?'selected':''}>${l}</option>`).join('')}</select>
+    <select data-role="op">${ops.map(v=>`<option value="${v}" ${v===row.op?'selected':''}>${t('op_'+v)}</option>`).join('')}</select>
     ${valueInputHtml(row, meta)}
   </div>`;
 }
@@ -476,9 +648,9 @@ function wireRow(container, entity, row, rowsArr, onChange){
   el.querySelector('[data-act="del"]').onclick = ()=>{ const i=rowsArr.indexOf(row); rowsArr.splice(i,1); if(rowsArr.length) rowsArr[0].andor=null; onChange(); };
   el.querySelector('[data-act="custom"]').onclick = ()=>{ row.custom=!row.custom; onChange(); };
   const andor = el.querySelector('[data-role="andor"]'); if(andor) andor.onchange = e=>{ row.andor=e.target.value; renderPreview(); };
-  wireFieldPicker(el, `fp-${row.id}`, entity, name=>{ row.field=name; const f=fieldByName(entity,name); row.op=OPS[f.t][0][0]; row.value=defaultValueFor(f); row.valueCustom=false; onChange(); });
+  wireFieldPicker(el, `fp-${row.id}`, entity, name=>{ row.field=name; const f=fieldByName(entity,name); row.op=OPS[f.t][0]; row.value=defaultValueFor(f); row.valueCustom=false; onChange(); });
   const cn = el.querySelector('[data-role="customName"]'); if(cn) cn.oninput = e=>{ row.customName=e.target.value; renderPreview(); };
-  const ct = el.querySelector('[data-role="customType"]'); if(ct) ct.onchange = e=>{ row.customType=e.target.value; row.op=OPS[row.customType][0][0]; row.value=""; onChange(); };
+  const ct = el.querySelector('[data-role="customType"]'); if(ct) ct.onchange = e=>{ row.customType=e.target.value; row.op=OPS[row.customType][0]; row.value=""; onChange(); };
   el.querySelector('[data-role="op"]').onchange = e=>{ row.op=e.target.value; onChange(); };
   const vc = el.querySelector('[data-act="valuecustom"]'); if(vc) vc.onclick = ()=>{ row.valueCustom=!row.valueCustom; row.value=""; onChange(); };
   const valEl = el.querySelector('[data-role="value"]'); if(valEl) valEl.oninput = e=>{ row.value=e.target.value; renderPreview(); };
@@ -498,25 +670,26 @@ function actionMultiInfo(){
   let fieldStream = false, fieldArray = false;
   if(returnMode==="field" && !returnCustom){
     const f = fieldByName(entity, returnField);
-    if(f){ if(f.t==="arrayAny") fieldStream=true; if(f.t==="arrayEnum") fieldArray=true; }
+    if(f){ if(f.t==="arrayAny") fieldStream=true; if(f.t==="arrayEnum"||f.t==="stringArray") fieldArray=true; }
   }
   return { isMulti: entityArr||fieldStream||fieldArray, entityArr, fieldStream, fieldArray };
 }
 function renderActionPanel(){
   if(!state.action || !REGISTRY[state.action.entity].scopes.includes(state.scope)) resetActionState();
   const sel = document.getElementById('actionEntitySelect');
-  sel.innerHTML = availableEntities().map(([k,v])=>`<option value="${k}" ${k===state.action.entity?'selected':''}>${v.label}</option>`).join('');
+  sel.innerHTML = availableEntities().map(([k,v])=>`<option value="${k}" ${k===state.action.entity?'selected':''}>${entityLabel(k)}</option>`).join('');
   sel.onchange = e=>{ const entity=e.target.value; state.action = { entity, rows:[], returnMode:"object", returnField:firstField(entity).n, returnCustom:false, returnCustomName:"", customExpr:"", cardinality:"all", dedup:false }; renderActionPanel(); };
 
   const entity = state.action.entity;
-  document.getElementById('entityNote').textContent = (REGISTRY[entity].note || "") + ` Путь: ${getRoot(entity) || '(текущий объект)'}`;
+  const noteKey = REGISTRY[entity].noteKey;
+  document.getElementById('entityNote').textContent = (noteKey ? t(noteKey)+" " : "") + t('path_label') + `: ${getRoot(entity) || t('current_object')}`;
 
   const filterArea = document.getElementById('filterArea');
   if(state.action.rows.length===0){
-    filterArea.innerHTML = `<div class="empty-filter"><span>Фильтр не задан — возвращаются все объекты.</span><button class="add-clause" id="addFirstFilter" style="margin:0;">+ Добавить условие фильтрации</button></div>`;
+    filterArea.innerHTML = `<div class="empty-filter"><span>${t('no_filter_note')}</span><button class="add-clause" id="addFirstFilter" style="margin:0;">${t('add_filter_condition')}</button></div>`;
     document.getElementById('addFirstFilter').onclick = ()=>{ state.action.rows.push(newRow(entity, null)); renderActionPanel(); };
   } else {
-    filterArea.innerHTML = `<div class="rules-head"><span></span><span>И/ИЛИ</span><span>Поле</span><span>Оператор</span><span>Значение</span></div><div id="rows"></div><button class="add-clause" id="addRow">+ Добавить условие</button>`;
+    filterArea.innerHTML = `<div class="rules-head"><span></span><span>${t('and_or_label')}</span><span>${t('field_label')}</span><span>${t('operator_label')}</span><span>${t('value_label')}</span></div><div id="rows"></div><button class="add-clause" id="addRow">${t('add_condition')}</button>`;
     renderRowsList(document.getElementById('rows'), entity, state.action.rows, renderActionPanel);
     document.getElementById('addRow').onclick = ()=>{ state.action.rows.push(newRow(entity, 'and')); renderActionPanel(); };
   }
@@ -524,16 +697,16 @@ function renderActionPanel(){
   const ra = document.getElementById('returnArea');
   ra.innerHTML = `
     <div class="return-row">
-      <span class="gb-label">Форма</span>
+      <span class="gb-label">${t('form_label')}</span>
       <div class="segmented" id="returnModeSeg">
-        <button data-v="object">Объект целиком</button>
-        <button data-v="field">Значение поля</button>
-        <button data-v="custom">Своё выражение</button>
+        <button data-v="object">${t('object_mode')}</button>
+        <button data-v="field">${t('field_mode')}</button>
+        <button data-v="custom">${t('custom_mode')}</button>
       </div>
     </div>
     <div id="returnFieldWrap" class="return-row" style="display:none;">
-      <span class="gb-label">Поле</span>
-      <button class="custom-toggle ${state.action.returnCustom?'active':''}" id="returnCustomToggle" title="Своё поле">✎</button>
+      <span class="gb-label">${t('field_label2')}</span>
+      <button class="custom-toggle ${state.action.returnCustom?'active':''}" id="returnCustomToggle" title="${t('custom_field_title')}">✎</button>
       <div style="max-width:340px; flex:1;" id="returnFieldSlot">
         ${state.action.returnCustom
           ? `<input type="text" id="returnCustomInputField" placeholder="S.KL_HostIp" value="${state.action.returnCustomName||''}">`
@@ -542,17 +715,17 @@ function renderActionPanel(){
     </div>
     <div id="returnCustomWrap" style="display:none;">
       <textarea id="returnCustomInput" placeholder='.S.KL_HostName + "|" + (.S.KL_HostIp | split(",")[0])'>${state.action.customExpr}</textarea>
-      <p class="note">Применяется через <code>|</code> к каждому элементу после фильтра — пишите выражение относительно текущего объекта (<code>.</code>).</p>
+      <p class="note">${t('custom_expr_note')}</p>
     </div>
     ${(()=>{ const multi = actionMultiInfo().isMulti; return multi ? `
     <div class="return-row">
-      <span class="gb-label">Сколько вернуть</span>
+      <span class="gb-label">${t('how_many_label')}</span>
       <div class="segmented" id="cardinalitySeg">
-        <button data-v="all">Все совпадения (массив)</button>
-        <button data-v="first">Только первое</button>
+        <button data-v="all">${t('all_matches')}</button>
+        <button data-v="first">${t('first_only')}</button>
       </div>
-      <label class="checkline" id="dedupWrap" style="display:none;"><input type="checkbox" id="dedupChk" ${state.action.dedup?'checked':''}> убрать дубликаты (unique)</label>
-    </div>` : `<p class="note">Выбранное поле возвращает одно значение — результат не оборачивается в массив (или пусто, если фильтр не прошёл).</p>`; })()}
+      <label class="checkline" id="dedupWrap" style="display:none;"><input type="checkbox" id="dedupChk" ${state.action.dedup?'checked':''}> ${t('dedup_label')}</label>
+    </div>` : `<p class="note">${t('single_value_note')}</p>`; })()}
   `;
   renderSegmented('returnModeSeg', state.action.returnMode, v=>{ state.action.returnMode=v; renderActionPanel(); });
   document.getElementById('returnFieldWrap').style.display = state.action.returnMode==="field" ? "flex" : "none";
@@ -576,28 +749,28 @@ function renderTriggerPanel(){
   const wrap = document.getElementById('blocks');
   wrap.innerHTML = state.trigger.blocks.map((b,bi)=>{
     const isArr = isArrayFor(b.entity);
-    const connector = bi>0 ? `<div class="block-connector"><div class="segmented" data-blockandor="${b.id}"><button data-v="and" class="${b.andor==='and'?'active':''}">И</button><button data-v="or" class="${b.andor==='or'?'active':''}">ИЛИ</button></div></div>` : '';
-    const entityOptions = availableEntities().map(([k,v])=>`<option value="${k}" ${k===b.entity?'selected':''}>${v.label}</option>`).join('');
+    const connector = bi>0 ? `<div class="block-connector"><div class="segmented" data-blockandor="${b.id}"><button data-v="and" class="${b.andor==='and'?'active':''}">${t('and_option')}</button><button data-v="or" class="${b.andor==='or'?'active':''}">${t('or_option')}</button></div></div>` : '';
+    const entityOptions = availableEntities().map(([k,v])=>`<option value="${k}" ${k===b.entity?'selected':''}>${entityLabel(k)}</option>`).join('');
     const aggHtml = isArr ? `
       <div class="aggregate">
-        <span>выполняется для:</span>
+        <span>${t('applies_to_label')}</span>
         <div class="segmented" data-agg="${b.id}">
-          <button data-v="any" class="${b.agg==='any'?'active':''}">хотя бы одного (any)</button>
-          <button data-v="all" class="${b.agg==='all'?'active':''}">всех (all)</button>
+          <button data-v="any" class="${b.agg==='any'?'active':''}">${t('agg_any')}</button>
+          <button data-v="all" class="${b.agg==='all'?'active':''}">${t('agg_all')}</button>
         </div>
-        ${b.agg==='all' ? `<label class="checkline"><input type="checkbox" data-checklen="${b.id}" ${b.checkLength?'checked':''}> явная проверка length&gt;0</label>` : ''}
+        ${b.agg==='all' ? `<label class="checkline"><input type="checkbox" data-checklen="${b.id}" ${b.checkLength?'checked':''}> ${t('length_check_label')}</label>` : ''}
       </div>` : '';
     return `${connector}
     <div class="block" data-id="${b.id}">
       <div class="block-head">
-        <div class="left"><span class="block-entity-label">Источник</span><select data-role="blockEntity" style="width:auto;">${entityOptions}</select></div>
+        <div class="left"><span class="block-entity-label">${t('source_label')}</span><select data-role="blockEntity" style="width:auto;">${entityOptions}</select></div>
         ${aggHtml}
-        ${state.trigger.blocks.length>1 ? `<button class="block-remove" data-act="delblock" title="Удалить блок">×</button>` : ''}
+        ${state.trigger.blocks.length>1 ? `<button class="block-remove" data-act="delblock" title="${t('remove_block_title')}">×</button>` : ''}
       </div>
-      <div class="rules-head"><span></span><span>И/ИЛИ</span><span>Поле</span><span>Оператор</span><span>Значение</span></div>
+      <div class="rules-head"><span></span><span>${t('and_or_label')}</span><span>${t('field_label')}</span><span>${t('operator_label')}</span><span>${t('value_label')}</span></div>
       <div class="block-rows"></div>
-      <button class="add-clause" data-act="addrow">+ Добавить условие внутри блока</button>
-      ${b.agg==='all' && isArr ? `<p class="note warn">На пустом массиве <code>all(...)</code> вернёт <code>true</code>. ${b.checkLength ? 'Проверка длины добавлена.' : 'Включите проверку выше, если это нежелательно.'}</p>` : ''}
+      <button class="add-clause" data-act="addrow">${t('add_condition_block')}</button>
+      ${b.agg==='all' && isArr ? `<p class="note warn">${t('empty_all_warn')} ${b.checkLength ? t('length_check_added') : t('length_check_suggest')}</p>` : ''}
     </div>`;
   }).join('');
 
@@ -625,15 +798,15 @@ function switchScope(v){
 }
 function switchMode(v){ state.mode = v; renderAll(); }
 function renderBadgeAndHint(){
-  document.getElementById('modeBadge').textContent = state.mode==="trigger" ? "Триггер · true/false" : "Действие · данные";
+  document.getElementById('modeBadge').textContent = state.mode==="trigger" ? t('mode_badge_trigger') : t('mode_badge_action');
   document.getElementById('modeBadge').className = "tag " + (state.mode==="trigger" ? "trigger" : "");
-  const hints = {
-    "alert|trigger": "Контекст — сам алерт (.). Несколько источников можно объединять через И/ИЛИ.",
-    "alert|action": "Контекст — переменная alert.",
-    "incident|trigger": "Контекст — инцидент (.), алерты — через .Alerts[]?. Несколько источников можно объединять через И/ИЛИ.",
-    "incident|action": "Контекст — переменная incident.",
+  const hintKeys = {
+    "alert|trigger": "ctx_hint_alert_trigger",
+    "alert|action": "ctx_hint_alert_action",
+    "incident|trigger": "ctx_hint_incident_trigger",
+    "incident|action": "ctx_hint_incident_action",
   };
-  document.getElementById('ctxHint').textContent = hints[state.scope+"|"+state.mode];
+  document.getElementById('ctxHint').textContent = t(hintKeys[state.scope+"|"+state.mode]);
   document.getElementById('actionPanel').style.display = state.mode==="action" ? "block" : "none";
   document.getElementById('triggerPanel').style.display = state.mode==="trigger" ? "block" : "none";
 }
@@ -652,15 +825,18 @@ function buildCondition(entity, row){
   if(meta.t==="arrayAny"){
     const [arrPath, sub] = meta.n.replace("[]","").split(".");
     const val = jqLiteral(row.value,"string");
-    if(row.op==="equals") return `any(.${arrPath}[]?; .${sub} == ${val})`;
-    if(row.op==="contains") return `any(.${arrPath}[]?; .${sub} | contains(${val}))`;
+    if(row.op==="equalsAny") return `any(.${arrPath}[]?; .${sub} == ${val})`;
+    if(row.op==="containsAny") return `any(.${arrPath}[]?; .${sub} | contains(${val}))`;
   }
   const path = "." + meta.n;
-  if(meta.t==="arrayEnum"){
+  if(meta.t==="arrayEnum" || meta.t==="stringArray"){
     const val = jqLiteral(row.value,"string");
     switch(row.op){
       case "containsValue": return `((${path} // []) | index(${val}) != null)`;
       case "notContainsValue": return `((${path} // []) | index(${val}) == null)`;
+      case "anyContains": return `((${path} // []) | any(contains(${val})))`;
+      case "noneContains": return `((${path} // []) | any(contains(${val})) | not)`;
+      case "anyMatchesRegex": return `((${path} // []) | any(test(${val})))`;
       case "isEmpty": return `((${path} // []) | length == 0)`;
       case "isNotEmpty": return `((${path} // []) | length > 0)`;
     }
@@ -730,11 +906,12 @@ function renderPreview(){
 
 document.getElementById('copyBtn').onclick = async ()=>{
   const btn = document.getElementById('copyBtn');
-  try{ await navigator.clipboard.writeText(document.getElementById('jqOut').textContent); btn.textContent="Скопировано"; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent="Скопировать"; btn.classList.remove('copied'); },1500);}catch(e){}
+  try{ await navigator.clipboard.writeText(document.getElementById('jqOut').textContent); btn.textContent=t('copied_btn'); btn.classList.add('copied'); setTimeout(()=>{ btn.textContent=t('copy_btn'); btn.classList.remove('copied'); },1500);}catch(e){}
 };
 
 state.trigger.blocks = [newBlock(null)];
 resetActionState();
+applyStaticI18n();
 renderAll();
 </script>
 </body>
